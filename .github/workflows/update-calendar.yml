@@ -1,0 +1,35 @@
+name: Update Economic Calendar
+
+on:
+  schedule:
+    - cron: '0 */2 * * *'
+  workflow_dispatch:
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch and merge calendar data
+        run: |
+          curl -sf "https://nfs.faireconomy.media/ff_calendar_thisweek.json" > this.json || echo "[]" > this.json
+          curl -sf "https://nfs.faireconomy.media/ff_calendar_nextweek.json" > next.json || echo "[]" > next.json
+          node -e "
+            const fs = require('fs');
+            const a = JSON.parse(fs.readFileSync('this.json','utf8'));
+            const b = JSON.parse(fs.readFileSync('next.json','utf8'));
+            fs.writeFileSync('calendar-data.json', JSON.stringify([...a,...b]));
+            console.log('Saved', a.length + b.length, 'events');
+          "
+          rm this.json next.json
+
+      - name: Commit if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add calendar-data.json
+          git diff --staged --quiet || git commit -m "chore: update calendar data [skip ci]"
+          git push
