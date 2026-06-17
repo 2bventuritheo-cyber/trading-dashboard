@@ -1550,11 +1550,24 @@ document.addEventListener('click', e => {
 });
 
 async function fetchEcoData() {
+  // 1. Same-origin cached file (no CORS, updated every 2h by GitHub Action)
+  try {
+    const r = await fetch('/trading-dashboard/calendar-data.json', { cache:'no-cache' });
+    if (r.ok) {
+      const data = await r.json();
+      if (data && data.length) return data;
+    }
+  } catch(e) {}
+
+  // 2. Direct fetch (works if FF adds CORS headers in the future)
   const URLS = [
-    'https://nfs.faireconomy.media/ff_calendar_thisweek.json?version=1',
-    'https://nfs.faireconomy.media/ff_calendar_nextweek.json?version=1',
+    'https://nfs.faireconomy.media/ff_calendar_thisweek.json',
+    'https://nfs.faireconomy.media/ff_calendar_nextweek.json',
   ];
-  const PROXY = 'https://api.allorigins.win/raw?url=';
+  const PROXIES = [
+    'https://corsproxy.io/?',
+    'https://api.allorigins.win/raw?url=',
+  ];
   let allEvents = [];
   for (const url of URLS) {
     let ok = false;
@@ -1563,10 +1576,12 @@ async function fetchEcoData() {
       if (r.ok) { allEvents = allEvents.concat(await r.json()); ok = true; }
     } catch(e) {}
     if (!ok) {
-      try {
-        const r = await fetch(PROXY + encodeURIComponent(url));
-        if (r.ok) { allEvents = allEvents.concat(await r.json()); }
-      } catch(e) {}
+      for (const proxy of PROXIES) {
+        try {
+          const r = await fetch(proxy + encodeURIComponent(url));
+          if (r.ok) { allEvents = allEvents.concat(await r.json()); ok = true; break; }
+        } catch(e) {}
+      }
     }
   }
   return allEvents;
