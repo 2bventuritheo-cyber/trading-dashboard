@@ -829,20 +829,15 @@ tr:hover td { background: rgba(255,255,255,.02); }
     <div class="label" style="align-self:center">USD · EUR · GBP · JPY</div>
   </div>
   <div class="card" style="padding:0;overflow:hidden;border-radius:6px">
-    <div class="tradingview-widget-container" style="height:550px">
-      <div class="tradingview-widget-container__widget" style="height:550px"></div>
-      <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-events.js" async>
-      {
-        "colorTheme": "dark",
-        "isTransparent": true,
-        "width": "100%",
-        "height": "550",
-        "locale": "fr",
-        "importanceFilter": "1",
-        "currencyFilter": "USD,EUR,GBP,JPY"
-      }
-      </script>
-    </div>
+    <iframe
+      src="https://s.tradingview.com/embed-widget/events/?locale=fr#%7B%22colorTheme%22%3A%22dark%22%2C%22isTransparent%22%3Atrue%2C%22width%22%3A%22100%25%22%2C%22height%22%3A%22600%22%2C%22importanceFilter%22%3A%221%22%2C%22currencyFilter%22%3A%22USD%2CEUR%2CGBP%2CJPY%22%2C%22utm_source%22%3A%222bventuritheo-cyber.github.io%22%2C%22utm_medium%22%3A%22widget_new%22%2C%22utm_campaign%22%3A%22events%22%7D"
+      width="100%"
+      height="600"
+      frameborder="0"
+      allowtransparency="true"
+      scrolling="no"
+      style="display:block"
+    ></iframe>
   </div>
   <div style="font-size:11px;color:var(--muted);text-align:right;margin-top:6px">
     Source : <a href="https://www.tradingview.com/economic-calendar/" target="_blank" style="color:var(--muted);text-decoration:none">TradingView</a>
