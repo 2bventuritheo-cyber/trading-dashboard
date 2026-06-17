@@ -785,39 +785,66 @@ tr:hover td { background: rgba(255,255,255,.02); }
      CALENDRIER
 ══════════════════════════════════════════ -->
 <div class="page" id="page-calendar">
+
+  <!-- ── Vue mensuelle trades ── -->
   <div class="sh">
-    <div class="sh-title">Calendrier Économique</div>
-    <div class="label" style="align-self:center">Impact 3 étoiles · Heure de Paris</div>
+    <div class="sh-title">Vue mensuelle</div>
+    <div class="flex">
+      <button class="btn btn-ghost btn-sm" onclick="prevM()">&#8249;</button>
+      <span id="cal-lbl" style="font-size:13px;font-weight:700;padding:5px 16px;background:var(--bg3);border:1px solid var(--border2);border-radius:4px;min-width:150px;text-align:center;font-variant-numeric:tabular-nums"></span>
+      <button class="btn btn-ghost btn-sm" onclick="nextM()">&#8250;</button>
+    </div>
   </div>
-  <div class="card" style="padding:0;overflow:hidden;border-radius:6px;position:relative">
+
+  <div class="card" style="padding:16px 16px 12px">
+    <!-- Légende -->
+    <div class="flex" style="margin-bottom:14px;gap:16px;flex-wrap:wrap">
+      <div class="flex" style="gap:5px"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--green)"></span><span class="label">TP</span></div>
+      <div class="flex" style="gap:5px"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--red)"></span><span class="label">SL</span></div>
+      <div class="flex" style="gap:5px"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--dim)"></span><span class="label">BE</span></div>
+      <div class="flex" style="gap:5px"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:rgba(217,79,79,.18);border:1px solid rgba(217,79,79,.4)"></span><span class="label">News ★★★</span></div>
+    </div>
+
+    <!-- Entêtes jours -->
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:3px">
+      <div class="label" style="text-align:center;padding:4px">L</div>
+      <div class="label" style="text-align:center;padding:4px">M</div>
+      <div class="label" style="text-align:center;padding:4px">M</div>
+      <div class="label" style="text-align:center;padding:4px">J</div>
+      <div class="label" style="text-align:center;padding:4px">V</div>
+      <div class="label" style="text-align:center;padding:4px;color:var(--border2)">S</div>
+      <div class="label" style="text-align:center;padding:4px;color:var(--border2)">D</div>
+    </div>
+
+    <!-- Grille jours -->
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px" id="cal-grid"></div>
+
+    <!-- Stats du mois -->
+    <div id="cal-month-stats" style="display:flex;gap:20px;margin-top:14px;padding-top:12px;border-top:1px solid var(--border);flex-wrap:wrap"></div>
+  </div>
+
+  <!-- ── News haute importance ── -->
+  <div class="sh" style="margin-top:8px">
+    <div class="sh-title">Actualités économiques — Impact élevé</div>
+    <div class="label" style="align-self:center">USD · EUR · GBP · JPY</div>
+  </div>
+  <div class="card" style="padding:0;overflow:hidden">
     <iframe
       id="cal-iframe"
-      src="https://sslecal2.investing.com/?significance=3&columns=exc_flags,exc_currency,exc_importance,exc_actual,exc_forecast,exc_previous&features=datepicker,timezone,mobilScrollTable&countries=5,4,6,17,12&calType=week&timeZone=8&lang=5"
+      src="https://sslecal2.investing.com/?importance=3&columns=exc_flags,exc_currency,exc_importance,exc_actual,exc_forecast,exc_previous&features=datepicker,timezone,mobilScrollTable&countries=5,4,6,17,12,26&calType=week&timeZone=8&lang=5"
       width="100%"
-      height="640"
+      height="520"
       frameborder="0"
       allowtransparency="true"
       marginwidth="0"
       marginheight="0"
       style="display:block"
-      onload="calLoaded()"
-      onerror="calError()"
     ></iframe>
-    <!-- Fallback si iframe bloqué par le navigateur -->
-    <div id="cal-fallback" style="display:none;padding:40px 24px;text-align:center">
-      <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px">Calendrier non chargé</div>
-      <div style="font-size:12px;color:var(--muted);margin-bottom:20px">
-        Ton navigateur bloque l'intégration. Ouvre le calendrier directement sur Investing.com.
-      </div>
-      <a href="https://www.investing.com/economic-calendar/" target="_blank" class="btn btn-primary">
-        Ouvrir Investing.com
-      </a>
-    </div>
   </div>
-  <div style="font-size:11px;color:var(--muted);text-align:right;margin-top:8px">
-    Source : <a href="https://www.investing.com/economic-calendar/" target="_blank" style="color:var(--muted);text-decoration:none;border-bottom:1px solid var(--border)">Investing.com</a>
-    &nbsp;·&nbsp; Actualités haute importance uniquement (USD, EUR, GBP)
+  <div style="font-size:11px;color:var(--muted);text-align:right;margin-top:6px">
+    Source : <a href="https://www.investing.com/economic-calendar/" target="_blank" style="color:var(--muted);text-decoration:none">Investing.com</a>
   </div>
+
 </div>
 
 </div><!-- /wrap -->
@@ -1349,30 +1376,108 @@ function renderStats() {
 // ─── CALENDAR ────────────────────────────────────────────────────
 const MN = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
 
+// Jours à fort impact économique connus (à compléter manuellement ou laisser vide)
+// Format: 'YYYY-MM-DD'
+const HIGH_IMPACT_DAYS = [];
+
 function prevM() { calMo--; if (calMo < 0)  { calMo = 11; calY--; } renderCal(); }
 function nextM() { calMo++; if (calMo > 11) { calMo = 0;  calY++; } renderCal(); }
 
 function renderCal() {
   document.getElementById('cal-lbl').textContent = MN[calMo] + ' ' + calY;
-  document.getElementById('cal-hdrs').innerHTML = ['L','M','M','J','V','S','D']
-    .map(d => `<div class="cal-dh">${d}</div>`).join('');
+
   const offset = (d => d === 0 ? 6 : d - 1)(new Date(calY, calMo, 1).getDay());
   const dims   = new Date(calY, calMo + 1, 0).getDate();
   const today  = new Date();
   const byDate = {};
   trades.forEach(t => { if (!byDate[t.date]) byDate[t.date] = []; byDate[t.date].push(t); });
+
   let html = '';
-  for (let i = 0; i < offset; i++) html += '<div class="cal-day empty"></div>';
-  for (let d = 1; d <= dims; d++) {
-    const ds = `${calY}-${String(calMo + 1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const isT = today.getFullYear() === calY && today.getMonth() === calMo && today.getDate() === d;
-    const dt  = byDate[ds] || [];
-    const dots = dt.map(t => `<span class="cal-dot" style="background:${t.statut==='TP'?'#2ea84a':t.statut==='SL'?'#d94f4f':'#546278'}" title="${t.actif} ${t.sens} ${t.statut} ${t.rrr}R"></span>`).join('');
-    const rr   = dt.reduce((a, t) => a + t.rrr, 0);
-    const rrS  = dt.length ? `<div style="font-size:9px;color:${rr>=0?'#2ea84a':'#d94f4f'};margin-top:2px;font-variant-numeric:tabular-nums">${rr>0?'+':''}${rr.toFixed(1)}R</div>` : '';
-    html += `<div class="cal-day${isT?' today':''}"><div class="cal-dn">${d}</div>${dots}${rrS}</div>`;
+  // Cellules vides avant le 1er du mois
+  for (let i = 0; i < offset; i++) {
+    html += `<div style="min-height:72px"></div>`;
   }
+
+  for (let d = 1; d <= dims; d++) {
+    const ds  = `${calY}-${String(calMo+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const dow = new Date(calY, calMo, d).getDay(); // 0=dim, 6=sam
+    const isWeekend = dow === 0 || dow === 6;
+    const isToday   = today.getFullYear() === calY && today.getMonth() === calMo && today.getDate() === d;
+    const isHigh    = HIGH_IMPACT_DAYS.includes(ds);
+    const dt = byDate[ds] || [];
+    const rr = dt.reduce((a, t) => a + t.rrr, 0);
+
+    // Fond selon résultat du jour
+    let bgColor = isWeekend ? 'var(--bg)' : 'var(--bg3)';
+    let borderColor = 'var(--border)';
+    let alpha = '';
+    if (isHigh) { bgColor = 'rgba(217,79,79,.07)'; borderColor = 'rgba(217,79,79,.35)'; }
+    if (dt.length > 0) {
+      if (rr > 0) { bgColor = 'rgba(46,168,74,.07)'; borderColor = 'rgba(46,168,74,.3)'; }
+      else if (rr < 0) { bgColor = 'rgba(217,79,79,.07)'; borderColor = 'rgba(217,79,79,.3)'; }
+      else { bgColor = 'rgba(84,98,120,.07)'; }
+    }
+    if (isToday) borderColor = 'var(--accent)';
+
+    // Dots trades
+    const dots = dt.map(t => {
+      const c = t.statut==='TP' ? '#2ea84a' : t.statut==='SL' ? '#d94f4f' : '#546278';
+      return `<span title="${t.actif} ${t.sens} ${t.statut} ${t.rrr}R" style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${c};margin:1px 1px 0 0;flex-shrink:0"></span>`;
+    }).join('');
+
+    // RR du jour
+    const rrStr = dt.length
+      ? `<div style="font-size:10px;font-weight:800;font-variant-numeric:tabular-nums;color:${rr>0?'#2ea84a':rr<0?'#d94f4f':'#546278'};margin-top:auto">${rr>0?'+':''}${rr.toFixed(1)}R</div>`
+      : '';
+
+    // Indicateur news haute impact
+    const newsTag = isHigh
+      ? `<div style="font-size:8px;font-weight:800;color:rgba(217,79,79,.8);letter-spacing:.05em;text-transform:uppercase;margin-top:2px">NEWS</div>`
+      : '';
+
+    html += `<div style="
+      min-height:72px;
+      background:${bgColor};
+      border:1px solid ${borderColor};
+      border-radius:4px;
+      padding:7px 8px;
+      display:flex;
+      flex-direction:column;
+      transition:background .15s;
+      ${isWeekend ? 'opacity:.45;' : ''}
+    ">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+        <span style="font-size:11px;font-weight:700;color:${isToday ? 'var(--accent)' : 'var(--dim)'};font-variant-numeric:tabular-nums">${d}</span>
+        ${newsTag}
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:1px;margin-bottom:3px">${dots}</div>
+      ${rrStr}
+    </div>`;
+  }
+
   document.getElementById('cal-grid').innerHTML = html;
+
+  // Stats du mois
+  const monthTrades = trades.filter(t => t.date.startsWith(`${calY}-${String(calMo+1).padStart(2,'0')}`));
+  const s = cs(monthTrades);
+  const statsEl = document.getElementById('cal-month-stats');
+  if (!monthTrades.length) {
+    statsEl.innerHTML = `<span class="c-muted" style="font-size:12px">Aucun trade ce mois</span>`;
+  } else {
+    statsEl.innerHTML = [
+      { l:'Trades', v: s.total, c:'' },
+      { l:'Win Rate', v: s.wr, c: parseFloat(s.wr)>=50 ? 'c-green':'c-red' },
+      { l:'RR Cumulé', v: (s.rrCum>0?'+':'')+s.rrCum+'R', c: s.rrCum>=0?'c-green':'c-red' },
+      { l:'RR Moyen', v: s.rrMoy+'R', c: s.rrMoy>=0?'c-green':'c-red' },
+      { l:'Wins', v: s.wins, c:'c-green' },
+      { l:'Losses', v: s.loss, c:'c-red' },
+    ].map(item => `
+      <div>
+        <div style="font-size:16px;font-weight:800;font-variant-numeric:tabular-nums" class="${item.c}">${item.v}</div>
+        <div class="label">${item.l}</div>
+      </div>
+    `).join('');
+  }
 }
 
 // ─── CALENDAR IFRAME ─────────────────────────────────────────────
