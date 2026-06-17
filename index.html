@@ -824,23 +824,20 @@ tr:hover td { background: rgba(255,255,255,.02); }
   </div>
 
   <!-- ── News haute importance ── -->
-  <div class="sh" style="margin-top:8px">
+  <div class="sh" style="margin-top:28px">
     <div class="sh-title">Actualités économiques — Impact élevé</div>
-    <div class="label" style="align-self:center">USD · EUR · GBP · JPY</div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <div class="label">USD · EUR · GBP · JPY</div>
+      <button class="btn btn-ghost btn-sm" onclick="loadEcoCal(true)" title="Actualiser" style="padding:0 8px;font-size:14px;line-height:1">↻</button>
+    </div>
   </div>
-  <div class="card" style="padding:0;overflow:hidden;border-radius:6px">
-    <iframe
-      src="https://s.tradingview.com/embed-widget/events/?locale=fr#%7B%22colorTheme%22%3A%22dark%22%2C%22isTransparent%22%3Atrue%2C%22width%22%3A%22100%25%22%2C%22height%22%3A%22600%22%2C%22importanceFilter%22%3A%221%22%2C%22currencyFilter%22%3A%22USD%2CEUR%2CGBP%2CJPY%22%2C%22utm_source%22%3A%222bventuritheo-cyber.github.io%22%2C%22utm_medium%22%3A%22widget_new%22%2C%22utm_campaign%22%3A%22events%22%7D"
-      width="100%"
-      height="600"
-      frameborder="0"
-      allowtransparency="true"
-      scrolling="no"
-      style="display:block"
-    ></iframe>
+  <div class="card" id="eco-card" style="padding:0;overflow:hidden">
+    <div id="eco-cal" style="padding:20px;min-height:80px;display:flex;align-items:center;justify-content:center">
+      <span class="c-muted" style="font-size:12px">Chargement…</span>
+    </div>
   </div>
   <div style="font-size:11px;color:var(--muted);text-align:right;margin-top:6px">
-    Source : <a href="https://www.tradingview.com/economic-calendar/" target="_blank" style="color:var(--muted);text-decoration:none">TradingView</a>
+    Source : <a href="https://www.forexfactory.com/calendar" target="_blank" style="color:var(--muted);text-decoration:none">ForexFactory</a>
   </div>
 
 </div>
@@ -973,7 +970,7 @@ function go(name, btn) {
   if (name === 'journal')   renderJ();
   if (name === 'backtest')  renderBT();
   if (name === 'stats')     renderStats();
-  if (name === 'calendar')  renderCal();
+  if (name === 'calendar')  { renderCal(); loadEcoCal(); }
 }
 
 // ─── MODE ─────────────────────────────────────────────────────────
@@ -1478,33 +1475,119 @@ function renderCal() {
   }
 }
 
-// ─── CALENDAR IFRAME ─────────────────────────────────────────────
-let calTimer = null;
-function calLoaded() {
-  clearTimeout(calTimer);
-  // If iframe loaded but is blank/blocked, the height will be tiny — no reliable way to detect from outside
-}
-function calError() {
-  document.getElementById('cal-iframe').style.display = 'none';
-  document.getElementById('cal-fallback').style.display = 'block';
-}
-// Timeout fallback: if iframe takes >8s and seems empty, show fallback button
-document.addEventListener('DOMContentLoaded', () => {
-  const iframe = document.getElementById('cal-iframe');
-  if (!iframe) return;
-  calTimer = setTimeout(() => {
+// ─── ECONOMIC CALENDAR ───────────────────────────────────────────
+let _ecoCacheTs = 0;
+const ECO_CURRENCIES = ['USD','EUR','GBP','JPY'];
+const ECO_CCY_COL = { USD:'#4a8fe8', EUR:'#c8941a', GBP:'#2ea84a', JPY:'#d94f4f' };
+
+async function fetchEcoData() {
+  const URLS = [
+    'https://nfs.faireconomy.media/ff_calendar_thisweek.json?version=1',
+    'https://nfs.faireconomy.media/ff_calendar_nextweek.json?version=1',
+  ];
+  const PROXY = 'https://api.allorigins.win/raw?url=';
+  let allEvents = [];
+  for (const url of URLS) {
+    let ok = false;
     try {
-      // Try to detect a blank/blocked iframe by checking contentDocument
-      const doc = iframe.contentDocument || iframe.contentWindow?.document;
-      if (!doc || !doc.body || doc.body.innerHTML.trim() === '') {
-        iframe.style.display = 'none';
-        document.getElementById('cal-fallback').style.display = 'block';
-      }
-    } catch(e) {
-      // Cross-origin — this means the iframe loaded from a different origin (normal & OK)
+      const r = await fetch(url, { cache:'no-cache' });
+      if (r.ok) { allEvents = allEvents.concat(await r.json()); ok = true; }
+    } catch(e) {}
+    if (!ok) {
+      try {
+        const r = await fetch(PROXY + encodeURIComponent(url));
+        if (r.ok) { allEvents = allEvents.concat(await r.json()); }
+      } catch(e) {}
     }
-  }, 8000);
-});
+  }
+  return allEvents;
+}
+
+async function loadEcoCal(force) {
+  const el = document.getElementById('eco-cal');
+  if (!el) return;
+  const now = Date.now();
+  if (!force && _ecoCacheTs && now - _ecoCacheTs < 5*60*1000) return;
+
+  el.style.cssText = 'padding:20px;min-height:80px;display:flex;align-items:center;justify-content:center';
+  el.innerHTML = '<span class="c-muted" style="font-size:12px">Chargement…</span>';
+
+  try {
+    const allEvents = await fetchEcoData();
+    const events = allEvents.filter(e => e.impact === 'High' && ECO_CURRENCIES.includes(e.country));
+
+    if (!events.length) {
+      el.innerHTML = '<span class="c-muted" style="font-size:12px">Aucun événement haute importance cette semaine</span>';
+      return;
+    }
+
+    // Group by date
+    const groups = {};
+    events.forEach(e => { if (!groups[e.date]) groups[e.date] = []; groups[e.date].push(e); });
+    const sortedDates = Object.keys(groups).sort((a,b) => new Date(a) - new Date(b));
+
+    const todayD = new Date(); todayD.setHours(0,0,0,0);
+
+    let html = '<table style="width:100%;border-collapse:collapse">';
+    html += `<thead><tr style="border-bottom:1px solid var(--border)">
+      <th style="padding:8px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;width:70px">HEURE</th>
+      <th style="padding:8px 8px;text-align:left;font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;width:54px">CCY</th>
+      <th style="padding:8px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.05em;text-transform:uppercase">ÉVÉNEMENT</th>
+      <th style="padding:8px 12px;text-align:right;font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;width:72px">RÉEL</th>
+      <th style="padding:8px 12px;text-align:right;font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;width:72px">PRÉVU</th>
+      <th style="padding:8px 12px;text-align:right;font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;width:72px">PRÉC.</th>
+    </tr></thead><tbody>`;
+
+    for (const dateStr of sortedDates) {
+      const d = new Date(dateStr); d.setHours(0,0,0,0);
+      const isToday = d.getTime() === todayD.getTime();
+      const isPast  = d < todayD;
+      const dayFmt  = d.toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long' });
+      const capDay  = dayFmt.charAt(0).toUpperCase() + dayFmt.slice(1);
+
+      html += `<tr>
+        <td colspan="6" style="padding:9px 12px 7px;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
+          color:${isToday ? 'var(--accent)' : 'var(--muted)'};
+          border-top:1px solid ${isToday ? 'var(--accent)' : 'var(--border)'};
+          border-bottom:1px solid var(--border);
+          background:${isToday ? 'rgba(74,143,232,0.06)' : 'transparent'}">
+          ${capDay}${isToday ? ' <span style="font-size:9px;background:var(--accent);color:#fff;padding:1px 7px;border-radius:3px;margin-left:8px;vertical-align:middle">AUJOURD\'HUI</span>' : ''}
+        </td>
+      </tr>`;
+
+      for (const ev of groups[dateStr]) {
+        const opacity = isPast && !isToday ? '0.42' : '1';
+        const cColor  = ECO_CCY_COL[ev.country] || 'var(--muted)';
+
+        let actualColor = 'var(--text)';
+        if (ev.actual) {
+          const a = parseFloat(ev.actual), f = parseFloat(ev.forecast);
+          if (!isNaN(a) && !isNaN(f)) actualColor = a >= f ? 'var(--green)' : 'var(--red)';
+        }
+
+        html += `<tr style="border-bottom:1px solid var(--border);opacity:${opacity}">
+          <td style="padding:9px 12px;font-family:'SF Mono','Fira Code',monospace;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums">${ev.time || '—'}</td>
+          <td style="padding:9px 8px">
+            <span style="display:inline-block;font-size:10px;font-weight:800;color:${cColor};letter-spacing:.05em;background:${cColor}22;padding:2px 6px;border-radius:3px">${ev.country}</span>
+          </td>
+          <td style="padding:9px 12px;font-size:13px;color:var(--text)">${ev.title}</td>
+          <td style="padding:9px 12px;text-align:right;font-family:'SF Mono','Fira Code',monospace;font-size:12px;color:${ev.actual ? actualColor : 'var(--dim)'};font-variant-numeric:tabular-nums;font-weight:${ev.actual ? '700' : '400'}">${ev.actual || '—'}</td>
+          <td style="padding:9px 12px;text-align:right;font-family:'SF Mono','Fira Code',monospace;font-size:12px;color:var(--text);font-variant-numeric:tabular-nums">${ev.forecast || '—'}</td>
+          <td style="padding:9px 12px;text-align:right;font-family:'SF Mono','Fira Code',monospace;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums">${ev.previous || '—'}</td>
+        </tr>`;
+      }
+    }
+
+    html += '</tbody></table>';
+    el.style.cssText = 'display:block;padding:0';
+    el.innerHTML = html;
+    _ecoCacheTs = Date.now();
+
+  } catch(err) {
+    el.style.cssText = 'padding:20px;display:flex;align-items:center;justify-content:center';
+    el.innerHTML = `<span class="c-muted" style="font-size:12px">Erreur de chargement — <a href="https://www.forexfactory.com/calendar" target="_blank" style="color:var(--accent)">Ouvrir ForexFactory ↗</a></span>`;
+  }
+}
 
 // ─── INIT ─────────────────────────────────────────────────────────
 renderJ();
