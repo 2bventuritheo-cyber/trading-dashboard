@@ -1437,10 +1437,12 @@ function renderCal() {
     const ecoForDay = (ecoEventsByDate || {})[ds] || [];
     const ecoAbbrevs = [...new Set(ecoForDay.map(e => ecoAbbrev(e.title)))].slice(0,3);
     const hasEco = ecoAbbrevs.length > 0;
-    if (hasEco && borderColor === 'var(--border)') borderColor = 'rgba(217,79,79,.3)';
+    if (hasEco && borderColor === 'var(--border)') borderColor = 'rgba(200,148,26,.35)';
 
     const ecoTag = hasEco
-      ? `<div data-day-popup onclick="showDayEvents('${ds}',event)" style="font-size:8px;font-weight:800;color:rgba(217,79,79,.9);letter-spacing:.04em;text-transform:uppercase;cursor:pointer;line-height:1.3;text-align:right;max-width:60px">${ecoAbbrevs.join(' ')}</div>`
+      ? `<div data-day-popup onclick="showDayEvents('${ds}',event)" style="display:flex;flex-wrap:wrap;gap:2px;margin-top:auto;padding-top:4px;cursor:pointer">
+          ${ecoAbbrevs.map(a => `<span style="font-size:7px;font-weight:600;color:#c8941a;background:rgba(200,148,26,.12);border:1px solid rgba(200,148,26,.22);border-radius:3px;padding:1px 5px;line-height:1.5;letter-spacing:.02em">${a}</span>`).join('')}
+        </div>`
       : '';
 
     html += `<div style="
@@ -1455,12 +1457,12 @@ function renderCal() {
       ${isWeekend ? 'opacity:.45;' : ''}
       ${hasEco ? 'cursor:pointer;' : ''}
     " ${hasEco ? `onclick="showDayEvents('${ds}',event)"` : ''}>
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:5px">
+      <div style="margin-bottom:5px">
         <span style="font-size:11px;font-weight:700;color:${isToday ? 'var(--accent)' : 'var(--dim)'};font-variant-numeric:tabular-nums">${d}</span>
-        ${ecoTag}
       </div>
       <div style="display:flex;flex-wrap:wrap;gap:1px;margin-bottom:3px">${dots}</div>
       ${rrStr}
+      ${ecoTag}
     </div>`;
   }
 
