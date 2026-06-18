@@ -794,12 +794,21 @@ tr:hover td { background: rgba(255,255,255,.02); }
      STATS
 ══════════════════════════════════════════ -->
 <div class="page" id="page-stats">
-  <div class="sh">
+  <div class="sh" style="flex-wrap:wrap;gap:8px">
     <div class="sh-title">Statistiques</div>
-    <div class="flex">
-      <button class="btn btn-ghost btn-sm" id="sf-all"  onclick="filterS('all',this)">Tous</button>
-      <button class="btn btn-ghost btn-sm" id="sf-rl"   onclick="filterS('reel',this)">Réel</button>
-      <button class="btn btn-ghost btn-sm" id="sf-bt"   onclick="filterS('backtest',this)">Backtest</button>
+    <div class="flex" style="gap:6px;flex-wrap:wrap">
+      <div style="display:flex;gap:4px;align-items:center">
+        <span style="font-size:10px;color:var(--muted);font-weight:700;letter-spacing:.04em;text-transform:uppercase;margin-right:2px">Mode</span>
+        <button class="btn btn-ghost btn-sm" id="sf-all" onclick="filterS('all',this)">Tous</button>
+        <button class="btn btn-ghost btn-sm" id="sf-rl"  onclick="filterS('reel',this)">Réel</button>
+        <button class="btn btn-ghost btn-sm" id="sf-bt"  onclick="filterS('backtest',this)">Backtest</button>
+      </div>
+      <div style="display:flex;gap:4px;align-items:center;margin-left:8px">
+        <span style="font-size:10px;color:var(--muted);font-weight:700;letter-spacing:.04em;text-transform:uppercase;margin-right:2px">Setup</span>
+        <button class="btn btn-ghost btn-sm btn-primary" id="ss-all" onclick="filterSS('all',this)">Tous</button>
+        <button class="btn btn-ghost btn-sm" id="ss-day" onclick="filterSS('day',this)">Day</button>
+        <button class="btn btn-ghost btn-sm" id="ss-rob" onclick="filterSS('rob',this)">ROB</button>
+      </div>
     </div>
   </div>
 
@@ -994,6 +1003,7 @@ let trades = JSON.parse(localStorage.getItem('theo_v3') || '[]');
 let currentMode  = 'backtest';
 let currentSetup = 'day';
 let statsFilter  = 'all';
+let statsSetup   = 'all';
 let calY  = new Date().getFullYear();
 let calMo = new Date().getMonth();
 let chartRR = null;
@@ -1359,8 +1369,17 @@ function filterS(f, btn) {
   renderStats();
 }
 
+function filterSS(s, btn) {
+  statsSetup = s;
+  document.querySelectorAll('[id^="ss-"]').forEach(b => b.classList.remove('btn-primary'));
+  btn.classList.add('btn-primary');
+  renderStats();
+}
+
 function renderStats() {
-  const list = statsFilter === 'all' ? trades : trades.filter(t => t.mode === statsFilter);
+  let list = statsFilter === 'all' ? trades : trades.filter(t => t.mode === statsFilter);
+  if (statsSetup === 'day') list = list.filter(t => t.setup === 'Setup 1 - Day');
+  if (statsSetup === 'rob') list = list.filter(t => t.setup === 'Setup 2 - ROB' || t.setup === 'Setup 2 - Scalp');
   const s = cs(list);
   document.getElementById('s-wr').textContent  = s.wr;
   document.getElementById('s-rr').textContent  = s.rrMoy + 'R';
