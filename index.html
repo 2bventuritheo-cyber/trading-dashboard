@@ -646,29 +646,20 @@ tr:hover td { background: rgba(255,255,255,.02); }
         <span class="ctag ctag-core">Core</span>
         <span class="lock-ic">&#128274;</span>
       </div>
-      <div class="cond locked" id="c-rob-5">
-        <div class="cond-cb"></div><div class="cond-n">06</div>
-        <div class="cond-text">
-          <span class="cond-label">FVG &amp; BOS obligatoires</span>
-          <span class="cond-desc">Le FVG et le BOS doivent tous les deux être présents</span>
-        </div>
-        <span class="ctag ctag-core">Core</span>
-        <span class="lock-ic">&#128274;</span>
-      </div>
     </div>
 
     <div class="label" style="margin:14px 0 8px">Conditions optionnelles (+Qualité)</div>
     <div class="conds">
-      <div class="cond unlocked" id="c-rob-6" onclick="tickCond('rob',6)">
-        <div class="cond-cb"></div><div class="cond-n">07</div>
+      <div class="cond unlocked" id="c-rob-5" onclick="tickCond('rob',5)">
+        <div class="cond-cb"></div><div class="cond-n">06</div>
         <div class="cond-text">
           <span class="cond-label">Prise de liquidités</span>
           <span class="cond-desc">Si on prend un bas ou haut de session</span>
         </div>
         <span class="ctag ctag-opt">+Qualité</span>
       </div>
-      <div class="cond unlocked" id="c-rob-7" onclick="tickCond('rob',7)">
-        <div class="cond-cb"></div><div class="cond-n">08</div>
+      <div class="cond unlocked" id="c-rob-6" onclick="tickCond('rob',6)">
+        <div class="cond-cb"></div><div class="cond-n">07</div>
         <div class="cond-text">
           <span class="cond-label">PD Arrays</span>
           <span class="cond-desc">Si en plus on est dans un FVG HTF</span>
@@ -1010,9 +1001,9 @@ let calY  = new Date().getFullYear();
 let calMo = new Date().getMonth();
 let chartRR = null;
 
-const CORE_COUNT = { day: 6, rob: 6 };
-const COND_COUNT = { day: 8, rob: 8 };
-const OPT_START  = { day: 6, rob: 6 };
+const CORE_COUNT = { day: 6, rob: 5 };
+const COND_COUNT = { day: 8, rob: 7 };
+const OPT_START  = { day: 6, rob: 5 };
 
 // ─── SESSIONS ────────────────────────────────────────────────────
 const SESS_DEF = [
