@@ -188,6 +188,7 @@ body {
 }
 .setup-pill:hover { color: var(--text); border-color: var(--dim); }
 .setup-pill.on { color: var(--accent); border-color: var(--accent); background: rgba(74,143,232,.08); }
+.setup-pill.paused { opacity: .35; cursor: not-allowed; pointer-events: none; }
 
 /* ── CONDITIONS ── */
 .conds { display: flex; flex-direction: column; gap: 3px; }
@@ -233,8 +234,11 @@ body {
 }
 .cond.done .cond-n { color: var(--green); }
 
-.cond-label { flex: 1; font-size: 13px; color: var(--text); }
+.cond-text  { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.cond-label { font-size: 13px; color: var(--text); }
+.cond-desc  { font-size: 11px; color: var(--muted); line-height: 1.4; }
 .cond.locked .cond-label { color: var(--muted); }
+.cond.locked .cond-desc  { color: var(--dim); }
 
 .ctag {
   font-size: 9px;
@@ -494,8 +498,9 @@ tr:hover td { background: rgba(255,255,255,.02); }
 
   <!-- Setup selector -->
   <div class="setup-row">
-    <div class="setup-pill on" id="sp-day"   onclick="selectSetup('day')">Setup 1 — Day Trading</div>
-    <div class="setup-pill"    id="sp-scalp" onclick="selectSetup('scalp')">Setup 2 — Scalping</div>
+    <div class="setup-pill on" id="sp-day" onclick="selectSetup('day')">Setup 1 — Day Trading</div>
+    <div class="setup-pill"   id="sp-rob"  onclick="selectSetup('rob')">Setup 2 — ROB</div>
+    <div class="setup-pill paused" id="sp-scalp" title="En pause">Setup 3 — Scalping</div>
   </div>
 
   <!-- ── DAY TRADING ── -->
@@ -504,36 +509,54 @@ tr:hover td { background: rgba(255,255,255,.02); }
     <div class="conds">
       <div class="cond unlocked" id="c-day-0" onclick="tickCond('day',0)">
         <div class="cond-cb"></div><div class="cond-n">01</div>
-        <span class="cond-label">PD Array HTF / Liquidités importantes</span>
+        <div class="cond-text">
+          <span class="cond-label">PD Array HTF / Liquidités importantes</span>
+          <span class="cond-desc">Dans un FVG ou BPR, ou une prise d'un Swing ou d'une Session</span>
+        </div>
         <span class="ctag ctag-core">Core</span>
       </div>
       <div class="cond locked" id="c-day-1">
         <div class="cond-cb"></div><div class="cond-n">02</div>
-        <span class="cond-label">Sens de la tendance HTF</span>
+        <div class="cond-text">
+          <span class="cond-label">Sens de la tendance HTF</span>
+          <span class="cond-desc">Bien tracer ses Swings pour définir sa tendance</span>
+        </div>
         <span class="ctag ctag-core">Core</span>
         <span class="lock-ic">&#128274;</span>
       </div>
       <div class="cond locked" id="c-day-2">
         <div class="cond-cb"></div><div class="cond-n">03</div>
-        <span class="cond-label">Premium / Discount</span>
+        <div class="cond-text">
+          <span class="cond-label">Premium / Discount</span>
+          <span class="cond-desc">Premium pour une vente, Discount pour un achat</span>
+        </div>
         <span class="ctag ctag-core">Core</span>
         <span class="lock-ic">&#128274;</span>
       </div>
       <div class="cond locked" id="c-day-3">
         <div class="cond-cb"></div><div class="cond-n">04</div>
-        <span class="cond-label">OB M15 / M5</span>
+        <div class="cond-text">
+          <span class="cond-label">OB M15 / M5</span>
+          <span class="cond-desc">L'OB doit être valide et prendre de la liquidité</span>
+        </div>
         <span class="ctag ctag-core">Core</span>
         <span class="lock-ic">&#128274;</span>
       </div>
       <div class="cond locked" id="c-day-4">
         <div class="cond-cb"></div><div class="cond-n">05</div>
-        <span class="cond-label">MSS M15 / M5</span>
+        <div class="cond-text">
+          <span class="cond-label">MSS M15 / M5</span>
+          <span class="cond-desc">Bien tracer sa structure pour repérer le MSS — si la tendance est déjà bonne, pas besoin de MSS</span>
+        </div>
         <span class="ctag ctag-core">Core</span>
         <span class="lock-ic">&#128274;</span>
       </div>
       <div class="cond locked" id="c-day-5">
         <div class="cond-cb"></div><div class="cond-n">06</div>
-        <span class="cond-label">Horaires Killzones</span>
+        <div class="cond-text">
+          <span class="cond-label">Horaires Killzones</span>
+          <span class="cond-desc">Trade entre 8h–18h, pas avant, pas après</span>
+        </div>
         <span class="ctag ctag-core">Core</span>
         <span class="lock-ic">&#128274;</span>
       </div>
@@ -543,12 +566,18 @@ tr:hover td { background: rgba(255,255,255,.02); }
     <div class="conds">
       <div class="cond unlocked" id="c-day-6" onclick="tickCond('day',6)">
         <div class="cond-cb"></div><div class="cond-n">07</div>
-        <span class="cond-label">L'OB laisse du FVG</span>
+        <div class="cond-text">
+          <span class="cond-label">Liquidité pertinente</span>
+          <span class="cond-desc">L'OB prend une liquidité pertinente — un Swing ou des Equal</span>
+        </div>
         <span class="ctag ctag-opt">+Qualité</span>
       </div>
       <div class="cond unlocked" id="c-day-7" onclick="tickCond('day',7)">
         <div class="cond-cb"></div><div class="cond-n">08</div>
-        <span class="cond-label">Liquidité pertinente</span>
+        <div class="cond-text">
+          <span class="cond-label">L'OB laisse du FVG</span>
+          <span class="cond-desc">L'OB se valide en laissant du FVG</span>
+        </div>
         <span class="ctag ctag-opt">+Qualité</span>
       </div>
     </div>
@@ -567,56 +596,86 @@ tr:hover td { background: rgba(255,255,255,.02); }
     </div>
   </div>
 
-  <!-- ── SCALPING ── -->
-  <div id="cl-scalp" style="display:none">
+  <!-- ── ROB ── -->
+  <div id="cl-rob" style="display:none">
     <div class="label" style="margin-bottom:10px">Conditions obligatoires</div>
     <div class="conds">
-      <div class="cond unlocked" id="c-scalp-0" onclick="tickCond('scalp',0)">
+      <div class="cond unlocked" id="c-rob-0" onclick="tickCond('rob',0)">
         <div class="cond-cb"></div><div class="cond-n">01</div>
-        <span class="cond-label">PD Array M15</span>
+        <div class="cond-text">
+          <span class="cond-label">Prise de liquidités</span>
+          <span class="cond-desc">Interne ou externe — à définir en backtest</span>
+        </div>
         <span class="ctag ctag-core">Core</span>
       </div>
-      <div class="cond locked" id="c-scalp-1">
+      <div class="cond locked" id="c-rob-1">
         <div class="cond-cb"></div><div class="cond-n">02</div>
-        <span class="cond-label">Sens de la tendance M15</span>
+        <div class="cond-text">
+          <span class="cond-label">Sens de la tendance M15</span>
+          <span class="cond-desc">Être dans le sens de la tendance est obligatoire</span>
+        </div>
         <span class="ctag ctag-core">Core</span>
         <span class="lock-ic">&#128274;</span>
       </div>
-      <div class="cond locked" id="c-scalp-2">
+      <div class="cond locked" id="c-rob-2">
         <div class="cond-cb"></div><div class="cond-n">03</div>
-        <span class="cond-label">OB M1</span>
+        <div class="cond-text">
+          <span class="cond-label">BOS</span>
+          <span class="cond-desc">Avoir un BOS après la prise de liquidité</span>
+        </div>
         <span class="ctag ctag-core">Core</span>
         <span class="lock-ic">&#128274;</span>
       </div>
-      <div class="cond locked" id="c-scalp-3">
+      <div class="cond locked" id="c-rob-3">
         <div class="cond-cb"></div><div class="cond-n">04</div>
-        <span class="cond-label">MSS M1</span>
+        <div class="cond-text">
+          <span class="cond-label">Displacement</span>
+          <span class="cond-desc">Avoir un FVG lors du mouvement</span>
+        </div>
         <span class="ctag ctag-core">Core</span>
         <span class="lock-ic">&#128274;</span>
       </div>
-      <div class="cond locked" id="c-scalp-4">
+      <div class="cond locked" id="c-rob-4">
         <div class="cond-cb"></div><div class="cond-n">05</div>
-        <span class="cond-label">Horaires Killzones</span>
+        <div class="cond-text">
+          <span class="cond-label">Entrée sur les 0.7</span>
+          <span class="cond-desc">Entrer sur les 0.7 ou plus haut si des liquidités s'arrêtent juste avant</span>
+        </div>
+        <span class="ctag ctag-core">Core</span>
+        <span class="lock-ic">&#128274;</span>
+      </div>
+      <div class="cond locked" id="c-rob-5">
+        <div class="cond-cb"></div><div class="cond-n">06</div>
+        <div class="cond-text">
+          <span class="cond-label">FVG &amp; BOS obligatoires</span>
+          <span class="cond-desc">Le FVG et le BOS doivent tous les deux être présents</span>
+        </div>
         <span class="ctag ctag-core">Core</span>
         <span class="lock-ic">&#128274;</span>
       </div>
     </div>
 
-    <div class="label" style="margin:14px 0 8px">Conditions optionnelles</div>
+    <div class="label" style="margin:14px 0 8px">Conditions optionnelles (+Qualité)</div>
     <div class="conds">
-      <div class="cond unlocked" id="c-scalp-5" onclick="tickCond('scalp',5)">
-        <div class="cond-cb"></div><div class="cond-n">06</div>
-        <span class="cond-label">Sens de la tendance HTF</span>
-        <span class="ctag ctag-opt">Niveau A</span>
-      </div>
-      <div class="cond unlocked" id="c-scalp-6" onclick="tickCond('scalp',6)">
+      <div class="cond unlocked" id="c-rob-6" onclick="tickCond('rob',6)">
         <div class="cond-cb"></div><div class="cond-n">07</div>
-        <span class="cond-label">Premium / Discount M15</span>
-        <span class="ctag ctag-opt">Niveau B</span>
+        <div class="cond-text">
+          <span class="cond-label">Prise de liquidités</span>
+          <span class="cond-desc">Si on prend un bas ou haut de session</span>
+        </div>
+        <span class="ctag ctag-opt">+Qualité</span>
+      </div>
+      <div class="cond unlocked" id="c-rob-7" onclick="tickCond('rob',7)">
+        <div class="cond-cb"></div><div class="cond-n">08</div>
+        <div class="cond-text">
+          <span class="cond-label">PD Arrays</span>
+          <span class="cond-desc">Si en plus on est dans un FVG HTF</span>
+        </div>
+        <span class="ctag ctag-opt">+Qualité</span>
       </div>
     </div>
 
-    <div class="cote-box cote-empty" id="cote-scalp" style="margin-top:18px">
+    <div class="cote-box cote-empty" id="cote-rob" style="margin-top:18px">
       <div class="cote-letter">—</div>
       <div class="cote-info">
         <div style="font-size:13px;font-weight:600;color:var(--dim)">En attente</div>
@@ -624,9 +683,9 @@ tr:hover td { background: rgba(255,255,255,.02); }
       </div>
     </div>
 
-    <div class="quick-log" id="qa-scalp">
-      <button class="btn btn-primary" style="flex:1" onclick="quickAdd('scalp')">Enregistrer ce trade</button>
-      <button class="btn btn-ghost" onclick="resetSetup('scalp')">Réinitialiser</button>
+    <div class="quick-log" id="qa-rob">
+      <button class="btn btn-primary" style="flex:1" onclick="quickAdd('rob')">Enregistrer ce trade</button>
+      <button class="btn btn-ghost" onclick="resetSetup('rob')">Réinitialiser</button>
     </div>
   </div>
 
@@ -685,7 +744,7 @@ tr:hover td { background: rgba(255,255,255,.02); }
       </div>
     </div>
     <div class="card">
-      <div class="label" style="margin-bottom:12px">Setup 2 — Scalping</div>
+      <div class="label" style="margin-bottom:12px">Setup 2 — ROB</div>
       <div class="flex" style="justify-content:space-between;align-items:baseline">
         <span id="bt-s-n" class="stat-val c-accent mono">0</span>
         <span class="c-muted" style="font-size:11px">/ 100 objectif</span>
@@ -875,7 +934,7 @@ tr:hover td { background: rgba(255,255,255,.02); }
       <div class="fg"><label class="fl">Setup</label>
         <select class="fs" id="t-setup">
           <option value="Setup 1 - Day">Setup 1 — Day Trading</option>
-          <option value="Setup 2 - Scalp">Setup 2 — Scalping</option>
+          <option value="Setup 2 - ROB">Setup 2 — ROB</option>
         </select>
       </div>
       <div class="fg"><label class="fl">Sens *</label>
@@ -939,9 +998,9 @@ let calY  = new Date().getFullYear();
 let calMo = new Date().getMonth();
 let chartRR = null;
 
-const CORE_COUNT = { day: 6, scalp: 5 };
-const COND_COUNT = { day: 8, scalp: 7 };
-const OPT_START  = { day: 6, scalp: 5 };
+const CORE_COUNT = { day: 6, rob: 6 };
+const COND_COUNT = { day: 8, rob: 8 };
+const OPT_START  = { day: 6, rob: 6 };
 
 // ─── SESSIONS ────────────────────────────────────────────────────
 const SESS_DEF = [
@@ -992,9 +1051,9 @@ function setMode(m) {
 function selectSetup(s) {
   currentSetup = s;
   document.getElementById('sp-day').classList.toggle('on', s === 'day');
-  document.getElementById('sp-scalp').classList.toggle('on', s === 'scalp');
-  document.getElementById('cl-day').style.display   = s === 'day'   ? 'block' : 'none';
-  document.getElementById('cl-scalp').style.display = s === 'scalp' ? 'block' : 'none';
+  document.getElementById('sp-rob').classList.toggle('on', s === 'rob');
+  document.getElementById('cl-day').style.display = s === 'day' ? 'block' : 'none';
+  document.getElementById('cl-rob').style.display = s === 'rob' ? 'block' : 'none';
 }
 
 // ─── CONDITIONS ──────────────────────────────────────────────────
@@ -1126,7 +1185,7 @@ function quickAdd(setup) {
   const cote = document.getElementById(`cote-${setup}`).querySelector('.cote-letter').textContent;
   openAdd(currentMode);
   setTimeout(() => {
-    document.getElementById('t-setup').value = setup === 'day' ? 'Setup 1 - Day' : 'Setup 2 - Scalp';
+    document.getElementById('t-setup').value = setup === 'day' ? 'Setup 1 - Day' : 'Setup 2 - ROB';
     if (['A+','A','B'].includes(cote)) document.getElementById('t-cote').value = cote;
   }, 50);
 }
@@ -1193,7 +1252,7 @@ function rowJ(t) {
     <td class="mono">${t.date}</td>
     <td class="fw7">${t.actif}</td>
     <td class="${sCl} fw7" style="font-size:12px">${t.sens}</td>
-    <td class="c-muted" style="font-size:11px">${t.setup === 'Setup 1 - Day' ? 'Day' : 'Scalp'}</td>
+    <td class="c-muted" style="font-size:11px">${t.setup === 'Setup 1 - Day' ? 'Day' : t.setup === 'Setup 2 - ROB' ? 'ROB' : 'Scalp'}</td>
     <td class="c-muted" style="font-size:11px">${t.kz || '—'}</td>
     <td class="mono c-muted" style="font-size:11px">${t.heure || '—'}</td>
     <td>${rrCell(t.rrr)}</td>
@@ -1214,7 +1273,7 @@ function rowBT(t) {
     <td class="mono">${t.date}</td>
     <td class="fw7">${t.actif}</td>
     <td class="${sCl} fw7" style="font-size:12px">${t.sens}</td>
-    <td class="c-muted" style="font-size:11px">${t.setup === 'Setup 1 - Day' ? 'Day' : 'Scalp'}</td>
+    <td class="c-muted" style="font-size:11px">${t.setup === 'Setup 1 - Day' ? 'Day' : t.setup === 'Setup 2 - ROB' ? 'ROB' : 'Scalp'}</td>
     <td class="c-muted" style="font-size:11px">${t.kz || '—'}</td>
     <td class="c-muted mono" style="font-size:11px">${t.tfa || '—'}</td>
     <td class="c-muted mono" style="font-size:11px">${t.tfe || '—'}</td>
@@ -1242,7 +1301,7 @@ function renderJ() { renderTable(trades.filter(t => t.mode === 'reel'), 'tbody-r
 // ─── BACKTEST ─────────────────────────────────────────────────────
 function renderBT() {
   const day   = trades.filter(t => t.mode === 'backtest' && t.setup === 'Setup 1 - Day');
-  const scalp = trades.filter(t => t.mode === 'backtest' && t.setup === 'Setup 2 - Scalp');
+  const scalp = trades.filter(t => t.mode === 'backtest' && (t.setup === 'Setup 2 - ROB' || t.setup === 'Setup 2 - Scalp'));
 
   const upProg = (pfx, count, palPfx) => {
     const pct = Math.min(100, count / 100 * 100);
