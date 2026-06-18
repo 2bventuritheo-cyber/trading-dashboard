@@ -322,6 +322,8 @@ body {
 }
 .btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
 .btn-primary:hover { opacity: .85; }
+.btn-active { background: rgba(74,143,232,.15) !important; color: var(--accent) !important; border-color: var(--accent) !important; font-weight: 700; }
+.btn-active:hover { background: rgba(74,143,232,.25) !important; }
 .btn-secondary { background: var(--bg3); color: var(--text); border-color: var(--border2); }
 .btn-secondary:hover { border-color: var(--dim); }
 .btn-ghost { background: none; color: var(--muted); border-color: var(--border); }
@@ -799,15 +801,15 @@ tr:hover td { background: rgba(255,255,255,.02); }
     <div class="flex" style="gap:6px;flex-wrap:wrap">
       <div style="display:flex;gap:4px;align-items:center">
         <span style="font-size:10px;color:var(--muted);font-weight:700;letter-spacing:.04em;text-transform:uppercase;margin-right:2px">Mode</span>
-        <button class="btn btn-ghost btn-sm" id="sf-all" onclick="filterS('all',this)">Tous</button>
-        <button class="btn btn-ghost btn-sm" id="sf-rl"  onclick="filterS('reel',this)">Réel</button>
-        <button class="btn btn-ghost btn-sm" id="sf-bt"  onclick="filterS('backtest',this)">Backtest</button>
+        <button class="btn btn-ghost btn-sm btn-active" id="sf-all" data-val="all"      onclick="filterS('all')">Tous</button>
+        <button class="btn btn-ghost btn-sm"            id="sf-rl"  data-val="reel"     onclick="filterS('reel')">Réel</button>
+        <button class="btn btn-ghost btn-sm"            id="sf-bt"  data-val="backtest" onclick="filterS('backtest')">Backtest</button>
       </div>
       <div style="display:flex;gap:4px;align-items:center;margin-left:8px">
         <span style="font-size:10px;color:var(--muted);font-weight:700;letter-spacing:.04em;text-transform:uppercase;margin-right:2px">Setup</span>
-        <button class="btn btn-ghost btn-sm btn-primary" id="ss-all" onclick="filterSS('all',this)">Tous</button>
-        <button class="btn btn-ghost btn-sm" id="ss-day" onclick="filterSS('day',this)">Day</button>
-        <button class="btn btn-ghost btn-sm" id="ss-rob" onclick="filterSS('rob',this)">ROB</button>
+        <button class="btn btn-ghost btn-sm btn-active" id="ss-all" data-val="all" onclick="filterSS('all')">Tous</button>
+        <button class="btn btn-ghost btn-sm"            id="ss-day" data-val="day" onclick="filterSS('day')">Day</button>
+        <button class="btn btn-ghost btn-sm"            id="ss-rob" data-val="rob" onclick="filterSS('rob')">ROB</button>
       </div>
     </div>
   </div>
@@ -1002,8 +1004,8 @@ tr:hover td { background: rgba(255,255,255,.02); }
 let trades = JSON.parse(localStorage.getItem('theo_v3') || '[]');
 let currentMode  = 'backtest';
 let currentSetup = 'day';
-let statsFilter  = 'all';
-let statsSetup   = 'all';
+let statsFilters = new Set(['all']); // multi-select: 'all' | 'reel' | 'backtest'
+let statsSetups  = new Set(['all']); // multi-select: 'all' | 'day' | 'rob'
 let calY  = new Date().getFullYear();
 let calMo = new Date().getMonth();
 let chartRR = null;
@@ -1362,24 +1364,38 @@ function cs(list) {
   return { wins: wins.length, loss: loss.length, be: be.length, total: list.length, nEff, wr, rrCum, rrMoy, pf };
 }
 
-function filterS(f, btn) {
-  statsFilter = f;
-  document.querySelectorAll('[id^="sf-"]').forEach(b => b.classList.remove('btn-primary'));
-  btn.classList.add('btn-primary');
+function toggleStatFilter(set, val, prefix) {
+  if (val === 'all') {
+    set.clear(); set.add('all');
+  } else {
+    set.delete('all');
+    if (set.has(val)) { set.delete(val); if (set.size === 0) set.add('all'); }
+    else { set.add(val); }
+  }
+  document.querySelectorAll('[id^="' + prefix + '"]').forEach(b => {
+    b.classList.toggle('btn-active', set.has(b.getAttribute('data-val')));
+  });
+}
+
+function filterS(val) {
+  toggleStatFilter(statsFilters, val, 'sf-');
   renderStats();
 }
 
-function filterSS(s, btn) {
-  statsSetup = s;
-  document.querySelectorAll('[id^="ss-"]').forEach(b => b.classList.remove('btn-primary'));
-  btn.classList.add('btn-primary');
+function filterSS(val) {
+  toggleStatFilter(statsSetups, val, 'ss-');
   renderStats();
 }
 
 function renderStats() {
-  let list = statsFilter === 'all' ? trades : trades.filter(t => t.mode === statsFilter);
-  if (statsSetup === 'day') list = list.filter(t => t.setup === 'Setup 1 - Day');
-  if (statsSetup === 'rob') list = list.filter(t => t.setup === 'Setup 2 - ROB' || t.setup === 'Setup 2 - Scalp');
+  let list = statsFilters.has('all') ? trades : trades.filter(t => statsFilters.has(t.mode));
+  if (!statsSetups.has('all')) {
+    list = list.filter(t => {
+      if (statsSetups.has('day') && t.setup === 'Setup 1 - Day') return true;
+      if (statsSetups.has('rob') && (t.setup === 'Setup 2 - ROB' || t.setup === 'Setup 2 - Scalp')) return true;
+      return false;
+    });
+  }
   const s = cs(list);
   document.getElementById('s-wr').textContent  = s.wr;
   document.getElementById('s-rr').textContent  = s.rrMoy + 'R';
