@@ -1478,7 +1478,7 @@ function renderCal() {
   const dims   = new Date(calY, calMo + 1, 0).getDate();
   const today  = new Date();
   const byDate = {};
-  trades.forEach(t => { if (!byDate[t.date]) byDate[t.date] = []; byDate[t.date].push(t); });
+  trades.filter(t => t.mode === 'reel').forEach(t => { if (!byDate[t.date]) byDate[t.date] = []; byDate[t.date].push(t); });
 
   let html = '';
   // Cellules vides avant le 1er du mois
@@ -1554,7 +1554,7 @@ function renderCal() {
   document.getElementById('cal-grid').innerHTML = html;
 
   // Stats du mois
-  const monthTrades = trades.filter(t => t.date.startsWith(`${calY}-${String(calMo+1).padStart(2,'0')}`));
+  const monthTrades = trades.filter(t => t.mode === 'reel' && t.date.startsWith(`${calY}-${String(calMo+1).padStart(2,'0')}`));
   const s = cs(monthTrades);
   const statsEl = document.getElementById('cal-month-stats');
   if (!monthTrades.length) {
