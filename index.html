@@ -1043,6 +1043,15 @@ function updateSessions() {
 updateSessions();
 setInterval(updateSessions, 1000);
 
+// ─── THEME ───────────────────────────────────────────────────────
+function updateTheme() {
+  const onStats = !!document.getElementById('page-stats')?.classList.contains('on');
+  const isBt = onStats
+    ? (statsFilters.has('backtest') && !statsFilters.has('reel') && !statsFilters.has('all'))
+    : currentMode === 'backtest';
+  document.body.classList.toggle('bt-mode', isBt);
+}
+
 // ─── NAVIGATION ──────────────────────────────────────────────────
 function go(name, btn) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('on'));
@@ -1053,6 +1062,7 @@ function go(name, btn) {
   if (name === 'backtest')  renderBT();
   if (name === 'stats')     renderStats();
   if (name === 'calendar')  { renderCal(); loadEcoCal(); }
+  updateTheme();
 }
 
 // ─── MODE ─────────────────────────────────────────────────────────
@@ -1060,7 +1070,7 @@ function setMode(m) {
   currentMode = m;
   document.getElementById('mb-bt').classList.toggle('on', m === 'backtest');
   document.getElementById('mb-rl').classList.toggle('on', m === 'reel');
-  document.body.classList.toggle('bt-mode', m === 'backtest');
+  updateTheme();
 }
 
 // ─── SETUP SELECTOR ──────────────────────────────────────────────
@@ -1382,7 +1392,10 @@ function toggleStatFilter(set, val, prefix) {
 }
 
 function filterS(val) {
-  toggleStatFilter(statsFilters, val, 'sf-');
+  // Mode est single-select (radio) — un seul actif à la fois
+  statsFilters = new Set([val]);
+  syncFilterBtns(statsFilters, 'sf-');
+  updateTheme();
   renderStats();
 }
 
@@ -1790,7 +1803,7 @@ async function loadEcoCal(force) {
 }
 
 // ─── INIT ─────────────────────────────────────────────────────────
-document.body.classList.toggle('bt-mode', currentMode === 'backtest');
+updateTheme();
 renderJ();
 </script>
 </body>
