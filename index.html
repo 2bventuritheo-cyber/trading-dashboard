@@ -1394,7 +1394,9 @@ function toggleStatFilter(set, val, prefix) {
 function filterS(val) {
   // Mode est single-select (radio) — un seul actif à la fois
   statsFilters = new Set([val]);
-  syncFilterBtns(statsFilters, 'sf-');
+  document.querySelectorAll('[id^="sf-"]').forEach(b => {
+    b.classList.toggle('btn-active', b.getAttribute('data-val') === val);
+  });
   updateTheme();
   renderStats();
 }
