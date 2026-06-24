@@ -22,6 +22,17 @@
   --orange: #c47b2a;
 }
 
+/* ── Thème Backtest ───────────────────────────────────────────── */
+body.bt-mode {
+  --bg:     #0a0d0a;
+  --bg2:    #0d110d;
+  --bg3:    #141b14;
+  --bg4:    #1a221a;
+  --border: #1e2b1e;
+  --border2:#283828;
+  --accent: #4ab86e;
+}
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
@@ -930,6 +941,7 @@ tr:hover td { background: rgba(255,255,255,.02); }
         <select class="fs" id="t-actif">
           <option value="DJ30">DJ30 — Dow Jones</option>
           <option value="NAS100">NAS100 — Nasdaq</option>
+          <option value="SP500">SP500 — S&amp;P 500</option>
           <option value="DAX">DAX</option>
         </select>
       </div>
@@ -1048,6 +1060,7 @@ function setMode(m) {
   currentMode = m;
   document.getElementById('mb-bt').classList.toggle('on', m === 'backtest');
   document.getElementById('mb-rl').classList.toggle('on', m === 'reel');
+  document.body.classList.toggle('bt-mode', m === 'backtest');
 }
 
 // ─── SETUP SELECTOR ──────────────────────────────────────────────
@@ -1399,7 +1412,7 @@ function renderStats() {
   document.getElementById('s-l').textContent   = s.loss;
   document.getElementById('s-be').textContent  = s.be;
 
-  document.getElementById('s-asset').innerHTML = ['DJ30', 'NAS100', 'DAX'].map(a => {
+  document.getElementById('s-asset').innerHTML = ['DJ30', 'NAS100', 'SP500', 'DAX'].map(a => {
     const t = list.filter(x => x.actif === a);
     const sv = cs(t);
     return `<tr>
@@ -1777,6 +1790,7 @@ async function loadEcoCal(force) {
 }
 
 // ─── INIT ─────────────────────────────────────────────────────────
+document.body.classList.toggle('bt-mode', currentMode === 'backtest');
 renderJ();
 </script>
 </body>
