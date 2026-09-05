@@ -488,10 +488,19 @@ tr:hover td { background: rgba(255,255,255,.02); }
     <button class="ntab"     onclick="go('stats',this)">Stats</button>
     <button class="ntab"     onclick="go('calendar',this)">Calendrier</button>
   </nav>
+    <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+    <button class="btn btn-ghost btn-sm" onclick="exportData()" style="border-color:var(--green);color:var(--green)">&#11015; Export</button>
+    <label class="btn btn-ghost btn-sm" style="border-color:var(--accent);color:var(--accent);cursor:pointer">
+      &#11014; Import
+      <input type="file" accept=".json" style="display:none" onchange="importData(event)">
+    </label>
+  </div>
 </header>
 
 <div class="wrap">
 
+  
+    
 <!-- ══════════════════════════════════════════
      CHECKLIST
 ══════════════════════════════════════════ -->
@@ -1802,6 +1811,40 @@ async function loadEcoCal(force) {
     el.style.cssText = 'padding:20px;display:flex;align-items:center;justify-content:center';
     el.innerHTML = `<span class="c-muted" style="font-size:12px">Erreur de chargement — <a href="https://www.forexfactory.com/calendar" target="_blank" style="color:var(--accent)">Ouvrir ForexFactory ↗</a></span>`;
   }
+}
+
+
+// ─── EXPORT / IMPORT ─────────────────────────────────────────────
+function exportData() {
+  const blob = new Blob([JSON.stringify(trades, null, 2)], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = 'dashboard-trades-' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importData(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    try {
+      const imported = JSON.parse(ev.target.result);
+      if (!Array.isArray(imported)) throw new Error('Format invalide');
+      const existingIds = new Set(trades.map(t => t.id));
+      const newTrades   = imported.filter(t => !existingIds.has(t.id));
+      trades = [...trades, ...newTrades].sort((a,b) => b.id - a.id);
+      localStorage.setItem('theo_v3', JSON.stringify(trades));
+      renderBT(); renderJ();
+      alert(newTrades.length + ' trade(s) importé(s).');
+    } catch(err) {
+      alert("Erreur lors de l'import : " + err.message);
+    }
+    e.target.value = '';
+  };
+  reader.readAsText(file);
 }
 
 // ─── INIT ─────────────────────────────────────────────────────────
