@@ -521,6 +521,7 @@ tr:hover td { background: rgba(255,255,255,.02); }
     <div class="setup-pill on" id="sp-day" onclick="selectSetup('day')">Setup 1 — Day Trading</div>
     <div class="setup-pill"   id="sp-rob"  onclick="selectSetup('rob')">Setup 2 — ROB</div>
     <div class="setup-pill paused" id="sp-scalp" title="En pause">Setup 3 — Scalping</div>
+    <div class="setup-pill" id="sp-intra" onclick="selectSetup('intra')">Setup 4 — Intraday</div>
   </div>
 
   <!-- ── DAY TRADING ── -->
@@ -700,6 +701,100 @@ tr:hover td { background: rgba(255,255,255,.02); }
     </div>
   </div>
 
+  <!-- ── INTRADAY ── -->
+  <div id="cl-intra" style="display:none">
+    <div class="label" style="margin-bottom:10px">Conditions obligatoires</div>
+    <div class="conds">
+      <div class="cond unlocked" id="c-intra-0" onclick="tickCond('intra',0)">
+        <div class="cond-cb"></div><div class="cond-n">01</div>
+        <div class="cond-text">
+          <span class="cond-label">Être en tendance H4 ou H1</span>
+          <span class="cond-desc">Bien tracer ses Swings pour définir sa tendance</span>
+        </div>
+        <span class="ctag ctag-core">Core</span>
+      </div>
+      <div class="cond locked" id="c-intra-1">
+        <div class="cond-cb"></div><div class="cond-n">02</div>
+        <div class="cond-text">
+          <span class="cond-label">Dans un FVG H4/H1 en Discount ou Premium</span>
+          <span class="cond-desc">Premium pour une vente, Discount pour un achat</span>
+        </div>
+        <span class="ctag ctag-core">Core</span>
+        <span class="lock-ic">&#128274;</span>
+      </div>
+      <div class="cond locked" id="c-intra-2">
+        <div class="cond-cb"></div><div class="cond-n">03</div>
+        <div class="cond-text">
+          <span class="cond-label">OB validé en M15/M5</span>
+          <span class="cond-desc">L'OB doit être valide et prendre de la liquidité</span>
+        </div>
+        <span class="ctag ctag-core">Core</span>
+        <span class="lock-ic">&#128274;</span>
+      </div>
+      <div class="cond locked" id="c-intra-3">
+        <div class="cond-cb"></div><div class="cond-n">04</div>
+        <div class="cond-text">
+          <span class="cond-label">L'OB laisse un FVG</span>
+          <span class="cond-desc">L'OB se valide en laissant du FVG</span>
+        </div>
+        <span class="ctag ctag-core">Core</span>
+        <span class="lock-ic">&#128274;</span>
+      </div>
+      <div class="cond locked" id="c-intra-4">
+        <div class="cond-cb"></div><div class="cond-n">05</div>
+        <div class="cond-text">
+          <span class="cond-label">MSS</span>
+          <span class="cond-desc">Bien tracer sa structure pour repérer le MSS</span>
+        </div>
+        <span class="ctag ctag-core">Core</span>
+        <span class="lock-ic">&#128274;</span>
+      </div>
+    </div>
+
+    <div class="label" style="margin:14px 0 8px">Conditions optionnelles (+Qualité)</div>
+    <div class="conds">
+      <div class="cond unlocked" id="c-intra-5" onclick="tickCond('intra',5)">
+        <div class="cond-cb"></div><div class="cond-n">06</div>
+        <div class="cond-text">
+          <span class="cond-label">FVG Haut HTF (Weekly/Daily)</span>
+          <span class="cond-desc">Un FVG haute timeframe renforce la zone</span>
+        </div>
+        <span class="ctag ctag-opt">+Qualité</span>
+      </div>
+      <div class="cond unlocked" id="c-intra-6" onclick="tickCond('intra',6)">
+        <div class="cond-cb"></div><div class="cond-n">07</div>
+        <div class="cond-text">
+          <span class="cond-label">Liquidité importante (EQL ou EQH)</span>
+          <span class="cond-desc">Présence d'Equal Lows/Highs pertinents</span>
+        </div>
+        <span class="ctag ctag-opt">+Qualité</span>
+      </div>
+    </div>
+
+    <div class="label" style="margin:14px 0 8px">Exécution</div>
+    <div class="conds">
+      <div class="cond" style="cursor:default">
+        <div class="cond-text">
+          <span class="cond-label">Entrée sur l'OB ou niveau clé</span>
+          <span class="cond-desc">SL OB — TP prochain swing ou liquidités</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="cote-box cote-empty" id="cote-intra" style="margin-top:18px">
+      <div class="cote-letter">—</div>
+      <div class="cote-info">
+        <div style="font-size:13px;font-weight:600;color:var(--dim)">En attente</div>
+        <div class="cote-desc">Valide les conditions pour obtenir ta cote</div>
+      </div>
+    </div>
+
+    <div class="quick-log" id="qa-intra">
+      <button class="btn btn-primary" style="flex:1" onclick="quickAdd('intra')">Enregistrer ce trade</button>
+      <button class="btn btn-ghost" onclick="resetSetup('intra')">Réinitialiser</button>
+    </div>
+  </div>
+
 </div><!-- /checklist -->
 
 
@@ -769,6 +864,21 @@ tr:hover td { background: rgba(255,255,255,.02); }
         <div class="stat-box" id="ps100" style="padding:8px 10px;text-align:center"><div style="font-size:13px;font-weight:800;color:var(--muted)">100</div><div style="font-size:8px;color:var(--muted);margin-top:2px;text-transform:uppercase;letter-spacing:.04em">Validation</div></div>
       </div>
     </div>
+    <div class="card">
+      <div class="label" style="margin-bottom:12px">Setup 4 — Intraday</div>
+      <div class="flex" style="justify-content:space-between;align-items:baseline">
+        <span id="bt-i-n" class="stat-val c-accent mono">0</span>
+        <span class="c-muted" style="font-size:11px">/ 100 objectif</span>
+      </div>
+      <div class="prog-wrap"><div class="prog-bar" id="bt-i-bar" style="width:0%"></div></div>
+      <div style="font-size:10px;color:var(--muted)" id="bt-i-pct">0.0%</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:14px">
+        <div class="stat-box" id="pi25" style="padding:8px 10px;text-align:center"><div style="font-size:13px;font-weight:800;color:var(--muted)">25</div><div style="font-size:8px;color:var(--muted);margin-top:2px;text-transform:uppercase;letter-spacing:.04em">Palier</div></div>
+        <div class="stat-box" id="pi50" style="padding:8px 10px;text-align:center"><div style="font-size:13px;font-weight:800;color:var(--muted)">50</div><div style="font-size:8px;color:var(--muted);margin-top:2px;text-transform:uppercase;letter-spacing:.04em">Palier</div></div>
+        <div class="stat-box" id="pi75" style="padding:8px 10px;text-align:center"><div style="font-size:13px;font-weight:800;color:var(--muted)">75</div><div style="font-size:8px;color:var(--muted);margin-top:2px;text-transform:uppercase;letter-spacing:.04em">Palier</div></div>
+        <div class="stat-box" id="pi100" style="padding:8px 10px;text-align:center"><div style="font-size:13px;font-weight:800;color:var(--muted)">100</div><div style="font-size:8px;color:var(--muted);margin-top:2px;text-transform:uppercase;letter-spacing:.04em">Validation</div></div>
+      </div>
+    </div>
   </div>
 
   <div class="card">
@@ -793,7 +903,7 @@ tr:hover td { background: rgba(255,255,255,.02); }
     <div class="label" style="margin-bottom:14px">Critères de validation</div>
     <div class="scroll">
       <table>
-        <thead><tr><th>Critère</th><th>Seuil</th><th>Day Trading</th><th>Scalping</th></tr></thead>
+        <thead><tr><th>Critère</th><th>Seuil</th><th>Day Trading</th><th>Scalping</th><th>Intraday</th></tr></thead>
         <tbody id="val-tbody"></tbody>
       </table>
     </div>
@@ -819,6 +929,7 @@ tr:hover td { background: rgba(255,255,255,.02); }
         <button class="btn btn-ghost btn-sm btn-active" id="ss-all" data-val="all" onclick="filterSS('all')">Tous</button>
         <button class="btn btn-ghost btn-sm"            id="ss-day" data-val="day" onclick="filterSS('day')">Day</button>
         <button class="btn btn-ghost btn-sm"            id="ss-rob" data-val="rob" onclick="filterSS('rob')">ROB</button>
+        <button class="btn btn-ghost btn-sm"            id="ss-intra" data-val="intra" onclick="filterSS('intra')">Intraday</button>
       </div>
     </div>
   </div>
@@ -956,6 +1067,7 @@ tr:hover td { background: rgba(255,255,255,.02); }
         <select class="fs" id="t-setup">
           <option value="Setup 1 - Day">Setup 1 — Day Trading</option>
           <option value="Setup 2 - ROB">Setup 2 — ROB</option>
+          <option value="Setup 4 - Intraday">Setup 4 — Intraday</option>
         </select>
       </div>
       <div class="fg"><label class="fl">Sens *</label>
@@ -1026,9 +1138,9 @@ let calY  = new Date().getFullYear();
 let calMo = new Date().getMonth();
 let chartRR = null;
 
-const CORE_COUNT = { day: 6, rob: 5 };
-const COND_COUNT = { day: 8, rob: 7 };
-const OPT_START  = { day: 6, rob: 5 };
+const CORE_COUNT = { day: 6, rob: 5, intra: 5 };
+const COND_COUNT = { day: 8, rob: 7, intra: 7 };
+const OPT_START  = { day: 6, rob: 5, intra: 5 };
 
 // ─── SESSIONS ────────────────────────────────────────────────────
 const SESS_DEF = [
@@ -1091,8 +1203,10 @@ function selectSetup(s) {
   currentSetup = s;
   document.getElementById('sp-day').classList.toggle('on', s === 'day');
   document.getElementById('sp-rob').classList.toggle('on', s === 'rob');
+  document.getElementById('sp-intra').classList.toggle('on', s === 'intra');
   document.getElementById('cl-day').style.display = s === 'day' ? 'block' : 'none';
   document.getElementById('cl-rob').style.display = s === 'rob' ? 'block' : 'none';
+  document.getElementById('cl-intra').style.display = s === 'intra' ? 'block' : 'none';
 }
 
 // ─── CONDITIONS ──────────────────────────────────────────────────
@@ -1224,7 +1338,7 @@ function quickAdd(setup) {
   const cote = document.getElementById(`cote-${setup}`).querySelector('.cote-letter').textContent;
   openAdd(currentMode);
   setTimeout(() => {
-    document.getElementById('t-setup').value = setup === 'day' ? 'Setup 1 - Day' : 'Setup 2 - ROB';
+    document.getElementById('t-setup').value = setup === 'day' ? 'Setup 1 - Day' : setup === 'rob' ? 'Setup 2 - ROB' : 'Setup 4 - Intraday';
     if (['A+','A','B'].includes(cote)) document.getElementById('t-cote').value = cote;
   }, 50);
 }
@@ -1294,7 +1408,7 @@ function rowJ(t) {
     <td class="mono">${t.date}</td>
     <td class="fw7">${t.actif}</td>
     <td class="${sCl} fw7" style="font-size:12px">${t.sens}</td>
-    <td class="c-muted" style="font-size:11px">${t.setup === 'Setup 1 - Day' ? 'Day' : t.setup === 'Setup 2 - ROB' ? 'ROB' : 'Scalp'}</td>
+    <td class="c-muted" style="font-size:11px">${t.setup === 'Setup 1 - Day' ? 'Day' : t.setup === 'Setup 2 - ROB' ? 'ROB' : t.setup === 'Setup 4 - Intraday' ? 'Intraday' : 'Scalp'}</td>
     <td class="c-muted" style="font-size:11px">${t.kz || '—'}</td>
     <td class="mono c-muted" style="font-size:11px">${t.heure || '—'}</td>
     <td>${rrCell(t.rrr)}</td>
@@ -1315,7 +1429,7 @@ function rowBT(t) {
     <td class="mono">${t.date}</td>
     <td class="fw7">${t.actif}</td>
     <td class="${sCl} fw7" style="font-size:12px">${t.sens}</td>
-    <td class="c-muted" style="font-size:11px">${t.setup === 'Setup 1 - Day' ? 'Day' : t.setup === 'Setup 2 - ROB' ? 'ROB' : 'Scalp'}</td>
+    <td class="c-muted" style="font-size:11px">${t.setup === 'Setup 1 - Day' ? 'Day' : t.setup === 'Setup 2 - ROB' ? 'ROB' : t.setup === 'Setup 4 - Intraday' ? 'Intraday' : 'Scalp'}</td>
     <td class="c-muted" style="font-size:11px">${t.kz || '—'}</td>
     <td class="c-muted mono" style="font-size:11px">${t.tfa || '—'}</td>
     <td class="c-muted mono" style="font-size:11px">${t.tfe || '—'}</td>
@@ -1344,6 +1458,7 @@ function renderJ() { renderTable(trades.filter(t => t.mode === 'reel'), 'tbody-r
 function renderBT() {
   const day   = trades.filter(t => t.mode === 'backtest' && t.setup === 'Setup 1 - Day');
   const scalp = trades.filter(t => t.mode === 'backtest' && (t.setup === 'Setup 2 - ROB' || t.setup === 'Setup 2 - Scalp'));
+  const intra = trades.filter(t => t.mode === 'backtest' && t.setup === 'Setup 4 - Intraday');
 
   const upProg = (pfx, count, palPfx) => {
     const pct = Math.min(100, count / 100 * 100);
@@ -1360,6 +1475,7 @@ function renderBT() {
   };
   upProg('d', day.length, 'd');
   upProg('s', scalp.length, 's');
+  upProg('i', intra.length, 'i');
 
   renderTable(trades.filter(t => t.mode === 'backtest'), 'tbody-bt', 'empty-bt', true);
 
@@ -1375,7 +1491,7 @@ function renderBT() {
       const ok = c.ok(list);
       return `<td style="color:${ok ? 'var(--green)' : 'var(--red)'};" class="fw7 mono">${c.v(list)} <span style="opacity:.5">${ok ? '✓' : '✗'}</span></td>`;
     };
-    return `<tr><td>${c.n}</td><td class="c-muted">${c.s}</td>${cell(day)}${cell(scalp)}</tr>`;
+    return `<tr><td>${c.n}</td><td class="c-muted">${c.s}</td>${cell(day)}${cell(scalp)}${cell(intra)}</tr>`;
   }).join('');
 }
 
@@ -1428,6 +1544,7 @@ function renderStats() {
     list = list.filter(t => {
       if (statsSetups.has('day') && t.setup === 'Setup 1 - Day') return true;
       if (statsSetups.has('rob') && (t.setup === 'Setup 2 - ROB' || t.setup === 'Setup 2 - Scalp')) return true;
+      if (statsSetups.has('intra') && t.setup === 'Setup 4 - Intraday') return true;
       return false;
     });
   }
