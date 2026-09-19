@@ -581,6 +581,7 @@ tr[onclick]:hover { background: var(--bg3); }
     <div class="sh">
       <button class="btn btn-ghost btn-sm" onclick="backToAccounts()">&larr; Retour aux comptes</button>
       <div class="flex" style="gap:8px">
+        <button class="btn btn-secondary btn-sm" onclick="openAssignTradesModal()">+ Assigner des trades</button>
         <button class="btn btn-ghost btn-sm" onclick="openAccountModal(selectedAccountId)">Modifier</button>
         <button class="btn btn-ghost btn-sm" style="border-color:var(--red);color:var(--red)" onclick="deleteAccount(selectedAccountId)">Supprimer</button>
       </div>
@@ -1257,6 +1258,31 @@ tr[onclick]:hover { background: var(--bg3); }
   </div>
 </div>
 
+<div class="mo" id="m-assign">
+  <div class="modal" style="width:760px">
+    <div class="modal-hdr">
+      <span class="modal-title">Assigner des trades existants</span>
+      <button class="modal-close" onclick="closeAssignModal()">&#x2715;</button>
+    </div>
+    <div class="c-muted" style="font-size:11px;margin-bottom:14px">Sélectionne les trades réels à rattacher à ce compte. Décoche un trade déjà assigné pour le retirer du compte.</div>
+    <div class="scroll" style="max-height:50vh">
+      <table>
+        <thead><tr>
+          <th style="width:30px"></th><th>Date</th><th>Actif</th><th>Sens</th><th>RR</th><th>Statut</th><th>Risque %</th>
+        </tr></thead>
+        <tbody id="assign-tbody"></tbody>
+      </table>
+    </div>
+    <div class="empty" id="assign-empty" style="display:none">
+      <div class="empty-text">Aucun trade réel disponible à assigner</div>
+    </div>
+    <div class="flex" style="justify-content:flex-end;gap:8px;margin-top:16px">
+      <button class="btn btn-ghost" onclick="closeAssignModal()">Annuler</button>
+      <button class="btn btn-primary" onclick="saveAssignTrades()">Assigner</button>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -1554,6 +1580,62 @@ function refreshAccountsViewIfNeeded(accountId) {
   const onAccPage = document.getElementById('page-accounts')?.classList.contains('on');
   if (!onAccPage) return;
   if (selectedAccountId === accountId) renderAccountDetail(); else renderAccounts();
+}
+
+let assignAccountId = null;
+function openAssignTradesModal() {
+  assignAccountId = selectedAccountId;
+  renderAssignList();
+  document.getElementById('m-assign').classList.add('on');
+}
+function closeAssignModal() {
+  document.getElementById('m-assign').classList.remove('on');
+}
+function renderAssignList() {
+  const acc = accounts.find(a => a.id === assignAccountId);
+  const list = trades.filter(t => t.mode === 'reel' && (t.accountId == null || t.accountId === assignAccountId))
+    .sort((a, b) => new Date(b.date) - new Date(a.date));
+  const tbody = document.getElementById('assign-tbody');
+  const empty = document.getElementById('assign-empty');
+  if (!list.length) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  tbody.innerHTML = list.map(t => {
+    const checked = t.accountId === assignAccountId ? 'checked' : '';
+    const sB = t.statut === 'TP' ? 'b-tp' : t.statut === 'SL' ? 'b-sl' : 'b-be';
+    const riskVal = (t.risque != null && t.risque !== '') ? t.risque : (acc.defaultRisk || 0.25);
+    return `<tr>
+      <td><input type="checkbox" id="asg-${t.id}" ${checked} style="width:16px;height:16px;accent-color:var(--accent)"></td>
+      <td class="mono">${t.date}</td>
+      <td class="fw7">${t.actif}</td>
+      <td class="${t.sens === 'Achat' ? 'c-green' : 'c-red'}" style="font-size:12px">${t.sens}</td>
+      <td>${rrCell(t.rrr)}</td>
+      <td><span class="badge ${sB}">${t.statut}</span></td>
+      <td><input type="number" class="fi" id="asg-risk-${t.id}" step="0.01" style="width:70px;padding:5px 8px" value="${riskVal}"></td>
+    </tr>`;
+  }).join('');
+}
+function saveAssignTrades() {
+  const acc = accounts.find(a => a.id === assignAccountId);
+  if (!acc) { closeAssignModal(); return; }
+  const list = trades.filter(t => t.mode === 'reel' && (t.accountId == null || t.accountId === assignAccountId));
+  let changed = false;
+  list.forEach(t => {
+    const cb = document.getElementById('asg-' + t.id);
+    if (!cb) return;
+    if (cb.checked) {
+      const riskInput = document.getElementById('asg-risk-' + t.id);
+      const riskVal = parseFloat(riskInput.value) || (acc.defaultRisk || 0.25);
+      t.accountId = assignAccountId;
+      t.risque = riskVal;
+      changed = true;
+    } else if (t.accountId === assignAccountId) {
+      t.accountId = null;
+      changed = true;
+    }
+  });
+  if (changed) { saveTrades(); pushTrades(trades); }
+  closeAssignModal();
+  renderAccountDetail();
 }
 
 let tdCurrentId = null;
