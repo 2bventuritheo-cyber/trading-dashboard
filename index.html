@@ -1313,6 +1313,9 @@ let selectedAccountId = null;
 let accPnlPeriod = 'day';
 let accChartEQ = null;
 let accChartPnl = null;
+let accCalY = new Date().getFullYear();
+let accCalMo = new Date().getMonth();
+let accResultsStats = null;
 let currentMode  = 'backtest';
 let currentSetup = 'day';
 let statsFilters = new Set(['all']); // multi-select: 'all' | 'reel' | 'backtest'
@@ -2252,8 +2255,7 @@ function renderAccountDetail() {
           <button class="btn btn-ghost btn-sm ${accPnlPeriod === 'month' ? 'btn-active' : ''}" onclick="setAccPnlPeriod('month')">Mois</button>
         </div>
       </div>
-      <canvas id="acc-ch-pnl" height="140"></canvas>
-      <div class="empty" id="acc-ch-pnl-empty" style="display:none;padding:32px"><div class="empty-text">Aucune donnée</div></div>
+      <div id="acc-results-body"></div>
     </div>
 
     <div class="card">
@@ -2275,7 +2277,7 @@ function renderAccountDetail() {
 
   renderAccTradesTable(s);
   renderAccEquityChart(s);
-  renderAccPnlChart(s);
+  renderAccResults(s);
 }
 
 function renderAccTradesTable(s) {
@@ -2341,31 +2343,177 @@ function periodKey(dateStr, period) {
   return dt.getUTCFullYear() + '-S' + String(week).padStart(2, '0');
 }
 
-function renderAccPnlChart(s) {
-  const canvas = document.getElementById('acc-ch-pnl');
-  const empty = document.getElementById('acc-ch-pnl-empty');
-  if (accChartPnl) { accChartPnl.destroy(); accChartPnl = null; }
-  if (!s.ts.length) { canvas.style.display = 'none'; empty.style.display = 'block'; return; }
-  canvas.style.display = 'block'; empty.style.display = 'none';
-  const groups = {};
-  s.ts.forEach((t, i) => { const k = periodKey(t.date, accPnlPeriod); groups[k] = (groups[k] || 0) + s.curve[i + 1].pnl; });
-  const keys = Object.keys(groups).sort();
-  const data = keys.map(k => +groups[k].toFixed(2));
-  accChartPnl = new Chart(canvas.getContext('2d'), {
-    type: 'bar',
-    data: { labels: keys, datasets: [{
-      label: 'P&L', data,
-      backgroundColor: data.map(v => v >= 0 ? 'rgba(34,230,168,.7)' : 'rgba(255,92,122,.7)'),
-      borderRadius: 3
-    }] },
-    options: {
-      responsive: true, plugins: { legend: { display: false } },
-      scales: {
-        x: { grid: { display: false }, ticks: { color: '#9089b3', font: { size: 9 } } },
-        y: { grid: { color: '#2a2444' }, ticks: { color: '#9089b3', font: { size: 10 } } }
-      }
+function renderAccResults(s) {
+  accResultsStats = s;
+  const body = document.getElementById('acc-results-body');
+  if (!body) return;
+  if (!s.ts.length) { body.innerHTML = '<div class="empty" style="padding:24px"><div class="empty-text">Aucune donnée</div></div>'; return; }
+  body.innerHTML = accPnlPeriod === 'day' ? renderAccCalendarHTML(s) : renderAccPeriodListHTML(s, accPnlPeriod);
+}
+
+function accCalNav(delta) {
+  accCalMo += delta;
+  if (accCalMo < 0) { accCalMo = 11; accCalY--; }
+  if (accCalMo > 11) { accCalMo = 0; accCalY++; }
+  renderAccResults(accResultsStats);
+}
+
+function renderAccCalendarHTML(s) {
+  const byDate = {};
+  s.ts.forEach((t, i) => { (byDate[t.date] = byDate[t.date] || []).push({ t, pnl: s.curve[i + 1].pnl }); });
+
+  const offset = (d => d === 0 ? 6 : d - 1)(new Date(accCalY, accCalMo, 1).getDay());
+  const dims = new Date(accCalY, accCalMo + 1, 0).getDate();
+  const today = new Date();
+
+  let cells = '';
+  for (let i = 0; i < offset; i++) cells += '<div style="min-height:60px"></div>';
+
+  for (let d = 1; d <= dims; d++) {
+    const ds = `${accCalY}-${String(accCalMo + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    const dt = byDate[ds] || [];
+    const dow = new Date(accCalY, accCalMo, d).getDay();
+    const isWeekend = dow === 0 || dow === 6;
+    const isToday = today.getFullYear() === accCalY && today.getMonth() === accCalMo && today.getDate() === d;
+    const dayPnl = dt.reduce((a, x) => a + x.pnl, 0);
+
+    let bgColor = 'transparent', borderColor = 'var(--border)';
+    if (dt.length) {
+      if (dayPnl > 0) { bgColor = 'rgba(34,230,168,.07)'; borderColor = 'rgba(34,230,168,.3)'; }
+      else if (dayPnl < 0) { bgColor = 'rgba(255,92,122,.07)'; borderColor = 'rgba(255,92,122,.3)'; }
+      else { bgColor = 'rgba(84,98,120,.07)'; }
     }
+    if (isToday) borderColor = 'var(--accent)';
+
+    const dots = dt.map(x => {
+      const c = x.t.statut === 'TP' ? '#22e6a8' : x.t.statut === 'SL' ? '#ff5c7a' : '#9089b3';
+      return `<span title="${x.t.actif} ${x.t.sens} ${x.t.statut} ${fmtUSD(x.pnl)}" style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${c};margin:1px 1px 0 0;flex-shrink:0"></span>`;
+    }).join('');
+
+    const pnlStr = dt.length
+      ? `<div style="font-size:10px;font-weight:800;font-variant-numeric:tabular-nums;color:${dayPnl > 0 ? '#22e6a8' : dayPnl < 0 ? '#ff5c7a' : '#9089b3'};margin-top:auto">${dayPnl > 0 ? '+' : ''}${fmtUSD(dayPnl)}</div>`
+      : '';
+
+    cells += `<div style="
+      min-height:60px;
+      background:${bgColor};
+      border:1px solid ${borderColor};
+      border-radius:4px;
+      padding:6px 7px;
+      display:flex;
+      flex-direction:column;
+      transition:background .15s;
+      ${isWeekend ? 'opacity:.55;' : ''}
+      ${dt.length ? 'cursor:pointer;' : ''}
+    " ${dt.length ? `onclick="showAccDayTrades('${ds}',event)"` : ''}>
+      <div style="margin-bottom:4px"><span style="font-size:11px;font-weight:700;color:${isToday ? 'var(--accent)' : 'var(--dim)'};font-variant-numeric:tabular-nums">${d}</span></div>
+      <div style="display:flex;flex-wrap:wrap;gap:1px;margin-bottom:2px">${dots}</div>
+      ${pnlStr}
+    </div>`;
+  }
+
+  return `
+    <div class="flex" style="justify-content:center;gap:14px;margin-bottom:10px">
+      <button class="btn btn-ghost btn-sm" onclick="accCalNav(-1)">&#8249;</button>
+      <span style="font-size:12px;font-weight:700;min-width:130px;text-align:center;font-variant-numeric:tabular-nums">${MN[accCalMo]} ${accCalY}</span>
+      <button class="btn btn-ghost btn-sm" onclick="accCalNav(1)">&#8250;</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:3px">
+      ${['L', 'M', 'M', 'J', 'V', 'S', 'D'].map(d => `<div class="label" style="text-align:center;padding:2px">${d}</div>`).join('')}
+    </div>
+    <div class="cal-grid">${cells}</div>
+  `;
+}
+
+function renderAccPeriodListHTML(s, period) {
+  const groups = {};
+  s.ts.forEach((t, i) => {
+    const k = periodKey(t.date, period);
+    if (!groups[k]) groups[k] = { trades: [], pnl: 0 };
+    groups[k].trades.push(t);
+    groups[k].pnl += s.curve[i + 1].pnl;
   });
+  const keys = Object.keys(groups).sort().reverse();
+  const rows = keys.map(k => {
+    const g = groups[k];
+    const wins = g.trades.filter(t => t.statut === 'TP').length;
+    const loss = g.trades.filter(t => t.statut === 'SL').length;
+    const lbl = period === 'month'
+      ? (() => { const [y, m] = k.split('-'); return MN[parseInt(m) - 1] + ' ' + y; })()
+      : (() => { const [y, w] = k.split('-S'); return 'Semaine ' + w + ' — ' + y; })();
+    return `<div onclick="showAccPeriodTrades('${k}','${period}',event)" style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-radius:8px;background:var(--bg3);border:1px solid var(--border);margin-bottom:6px;cursor:pointer;transition:border-color .15s" onmouseover="this.style.borderColor='var(--border2)'" onmouseout="this.style.borderColor='var(--border)'">
+      <div>
+        <div style="font-size:12px;font-weight:700">${lbl}</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:2px">${g.trades.length} trade${g.trades.length > 1 ? 's' : ''} · ${wins}W / ${loss}L</div>
+      </div>
+      <div class="mono" style="font-size:14px;font-weight:800;color:${g.pnl > 0 ? 'var(--green)' : g.pnl < 0 ? 'var(--red)' : 'var(--muted)'}">${g.pnl > 0 ? '+' : ''}${fmtUSD(g.pnl)}</div>
+    </div>`;
+  }).join('');
+  return `<div style="max-height:340px;overflow-y:auto">${rows}</div>`;
+}
+
+function pnlByIdFromStats(s) {
+  const map = {};
+  s.ts.forEach((t, i) => { map[t.id] = s.curve[i + 1].pnl; });
+  return map;
+}
+
+function showAccDayTrades(dateKey, evt) {
+  if (evt) evt.stopPropagation();
+  if (!accResultsStats) return;
+  const list = accResultsStats.ts.filter(t => t.date === dateKey);
+  if (!list.length) return;
+  const pnlById = pnlByIdFromStats(accResultsStats);
+  const d = new Date(dateKey + 'T00:00:00Z');
+  const dayLabel = d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' });
+  document.getElementById('day-popup-title').textContent = dayLabel.charAt(0).toUpperCase() + dayLabel.slice(1);
+  document.getElementById('day-popup-content').innerHTML = renderAccPopupTrades(list, pnlById);
+  positionDayPopup(evt);
+}
+
+function showAccPeriodTrades(k, period, evt) {
+  if (evt) evt.stopPropagation();
+  if (!accResultsStats) return;
+  const list = accResultsStats.ts.filter(t => periodKey(t.date, period) === k);
+  if (!list.length) return;
+  const pnlById = pnlByIdFromStats(accResultsStats);
+  const lbl = period === 'month'
+    ? (() => { const [y, m] = k.split('-'); return MN[parseInt(m) - 1] + ' ' + y; })()
+    : (() => { const [y, w] = k.split('-S'); return 'Semaine ' + w + ' — ' + y; })();
+  document.getElementById('day-popup-title').textContent = lbl;
+  document.getElementById('day-popup-content').innerHTML = renderAccPopupTrades(list, pnlById);
+  positionDayPopup(evt);
+}
+
+function renderAccPopupTrades(list, pnlById) {
+  return list.map(t => {
+    const pnl = pnlById[t.id] || 0;
+    const sB = t.statut === 'TP' ? 'b-tp' : t.statut === 'SL' ? 'b-sl' : 'b-be';
+    return `<div onclick="closeDayPopup(); openTradeDetail(${t.id})" style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);cursor:pointer">
+      <div style="min-width:0">
+        <div style="display:flex;align-items:center;gap:6px">
+          <span style="font-size:12px;font-weight:700">${t.actif}</span>
+          <span class="badge ${sB}" style="font-size:9px">${t.statut}</span>
+        </div>
+        <div style="font-size:10px;color:var(--muted);margin-top:2px">${t.sens} · ${t.date}</div>
+      </div>
+      <div class="mono" style="font-size:12px;font-weight:800;flex-shrink:0;color:${pnl > 0 ? 'var(--green)' : pnl < 0 ? 'var(--red)' : 'var(--muted)'}">${pnl > 0 ? '+' : ''}${fmtUSD(pnl)}</div>
+    </div>`;
+  }).join('');
+}
+
+function closeDayPopup() { document.getElementById('day-popup').style.display = 'none'; }
+
+function positionDayPopup(evt) {
+  const popup = document.getElementById('day-popup');
+  if (evt) {
+    const x = Math.min(evt.clientX, window.innerWidth - 340);
+    const y = Math.min(evt.clientY + 8, window.innerHeight - 220);
+    popup.style.left = x + 'px'; popup.style.top = y + 'px'; popup.style.transform = '';
+  } else {
+    popup.style.left = '50%'; popup.style.top = '50%'; popup.style.transform = 'translate(-50%,-50%)';
+  }
+  popup.style.display = 'block';
 }
 
 function accCalc(which, from) {
