@@ -449,6 +449,34 @@ tr:hover td { background: rgba(255,255,255,.02); }
 }
 .modal-title { font-size: 14px; font-weight: 700; letter-spacing: .01em; }
 .modal-close { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 20px; line-height: 1; padding: 4px 8px; border-radius: 999px; }
+
+/* ── TRADE DETAIL ── */
+.trade-detail-ov {
+  display: none; position: fixed; inset: 0; background: var(--bg); z-index: 300;
+  flex-direction: column;
+}
+.trade-detail-ov.on { display: flex; }
+.td-topbar {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 14px 24px; border-bottom: 1px solid var(--border); background: var(--bg2);
+  flex-shrink: 0;
+}
+.td-body { flex: 1; display: flex; overflow: hidden; }
+.td-shot {
+  flex: 1 1 50%; background: var(--bg2); border-right: 1px solid var(--border);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  overflow: auto; padding: 32px;
+}
+.td-shot-wrap { display: flex; align-items: center; justify-content: center; max-width: 100%; max-height: 100%; }
+.td-shot-img { max-width: 100%; max-height: 60vh; border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,.4); border: 1px solid var(--border2); }
+.td-shot-fallback { display: none; flex-direction: column; align-items: center; gap: 10px; padding: 40px; }
+.td-info { flex: 1 1 50%; overflow-y: auto; padding: 28px; }
+tr[onclick]:hover { background: var(--bg3); }
+@media (max-width: 900px) {
+  .td-body { flex-direction: column; }
+  .td-shot { border-right: none; border-bottom: 1px solid var(--border); flex: 0 0 auto; min-height: 260px; }
+  .td-info { flex: 1 1 auto; }
+}
 .modal-close:hover { color: var(--text); background: var(--bg3); }
 
 /* ── EMPTY STATE ── */
@@ -1218,6 +1246,17 @@ tr:hover td { background: rgba(255,255,255,.02); }
   </div>
 </div>
 
+<div class="trade-detail-ov" id="trade-detail-ov">
+  <div class="td-topbar">
+    <button class="btn btn-ghost btn-sm" onclick="closeTradeDetail()">&larr; Retour</button>
+    <button class="btn btn-ghost btn-sm" style="border-color:var(--red);color:var(--red)" onclick="deleteTradeFromDetail()">Supprimer</button>
+  </div>
+  <div class="td-body">
+    <div class="td-shot" id="td-shot"></div>
+    <div class="td-info" id="td-info"></div>
+  </div>
+</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -1517,6 +1556,79 @@ function refreshAccountsViewIfNeeded(accountId) {
   if (selectedAccountId === accountId) renderAccountDetail(); else renderAccounts();
 }
 
+let tdCurrentId = null;
+function openTradeDetail(id) {
+  const t = trades.find(x => x.id === id);
+  if (!t) return;
+  tdCurrentId = id;
+  renderTradeDetail(t);
+  document.getElementById('trade-detail-ov').classList.add('on');
+}
+function closeTradeDetail() {
+  document.getElementById('trade-detail-ov').classList.remove('on');
+  tdCurrentId = null;
+}
+function deleteTradeFromDetail() {
+  if (tdCurrentId == null) return;
+  const existedBefore = trades.some(t => t.id === tdCurrentId);
+  del(tdCurrentId);
+  const existsAfter = trades.some(t => t.id === tdCurrentId);
+  if (existedBefore && !existsAfter) closeTradeDetail();
+}
+function renderTradeDetail(t) {
+  const acc = t.accountId != null ? accounts.find(a => a.id === t.accountId) : null;
+  const setupLbl = t.setup === 'Setup 1 - Day' ? 'Day Trading' : t.setup === 'Setup 2 - ROB' ? 'ROB' : t.setup === 'Setup 4 - Intraday' ? 'Intraday' : t.setup === 'Setup 2 - Scalp' ? 'Scalp' : (t.setup || '—');
+  const sB = t.statut === 'TP' ? 'b-tp' : t.statut === 'SL' ? 'b-sl' : 'b-be';
+  const cB = t.cote === 'A+' ? 'b-ap' : t.cote === 'A' ? 'b-a' : 'b-b';
+  const sCl = t.sens === 'Achat' ? 'c-green' : 'c-red';
+
+  const shotEl = document.getElementById('td-shot');
+  const ssSafe = t.ss ? t.ss.replace(/"/g, '&quot;') : '';
+  shotEl.innerHTML = t.ss ? `
+    <div class="td-shot-wrap">
+      <img src="${ssSafe}" class="td-shot-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+      <div class="td-shot-fallback">
+        <div class="c-muted">Aperçu non disponible directement</div>
+      </div>
+    </div>
+    <a class="btn btn-primary" style="margin-top:16px" href="${ssSafe}" target="_blank" rel="noopener">Ouvrir le graphique TradingView &#8599;</a>
+  ` : `<div class="c-muted">Aucun screenshot enregistré pour ce trade</div>`;
+
+  document.getElementById('td-info').innerHTML = `
+    <div class="sh" style="margin-bottom:20px;align-items:flex-start">
+      <div>
+        <div class="sh-title" style="font-size:20px">${t.actif} <span class="${sCl}" style="font-size:14px">${t.sens}</span></div>
+        <div class="c-muted" style="margin-top:4px;font-size:12px">${t.date}${t.heure ? ' · ' + t.heure : ''} · ${t.mode === 'reel' ? 'Réel' : 'Backtest'}</div>
+      </div>
+      <span class="badge ${sB}" style="font-size:11px">${t.statut}</span>
+    </div>
+
+    <div class="g4" style="margin-bottom:16px">
+      <div class="stat-box"><div class="stat-val mono">${rrCell(t.rrc)}</div><div class="stat-lbl">RR Cible</div></div>
+      <div class="stat-box"><div class="stat-val mono">${rrCell(t.rrr)}</div><div class="stat-lbl">RR Réalisé</div></div>
+      <div class="stat-box"><div class="stat-val"><span class="badge ${cB}">${t.cote || '—'}</span></div><div class="stat-lbl">Cote</div></div>
+      <div class="stat-box"><div class="stat-val mono c-gold">${t.risque != null && t.risque !== '' ? t.risque + '%' : '—'}</div><div class="stat-lbl">Risque</div></div>
+    </div>
+
+    <div class="card" style="margin-bottom:16px">
+      <div class="label" style="margin-bottom:12px">Contexte</div>
+      <div class="g2">
+        <div><div class="fl">Setup</div><div style="margin-top:4px">${setupLbl}</div></div>
+        <div><div class="fl">Session</div><div style="margin-top:4px">${t.kz || '—'}</div></div>
+        <div><div class="fl">TF Analyse</div><div style="margin-top:4px">${t.tfa || '—'}</div></div>
+        <div><div class="fl">TF Entrée</div><div style="margin-top:4px">${t.tfe || '—'}</div></div>
+      </div>
+      ${t.liq ? `<div style="margin-top:14px"><div class="fl">Liquidité visée</div><div style="margin-top:4px">${t.liq}</div></div>` : ''}
+      ${acc ? `<div style="margin-top:14px"><div class="fl">Compte</div><div style="margin-top:4px">${acc.name}</div></div>` : ''}
+    </div>
+
+    ${t.com ? `<div class="card">
+      <div class="label" style="margin-bottom:10px">Commentaire</div>
+      <div style="white-space:pre-wrap;line-height:1.6">${t.com}</div>
+    </div>` : ''}
+  `;
+}
+
 function del(id) {
   if (!confirm('Supprimer ce trade ?')) return;
   const t = trades.find(x => x.id === id);
@@ -1538,8 +1650,8 @@ function rowJ(t) {
   const sCl = t.sens === 'Achat' ? 'c-green' : 'c-red';
   const sB  = t.statut === 'TP' ? 'b-tp' : t.statut === 'SL' ? 'b-sl' : 'b-be';
   const cB  = t.cote === 'A+' ? 'b-ap' : t.cote === 'A' ? 'b-a' : 'b-b';
-  const ss  = t.ss ? `<a href="${t.ss}" target="_blank" style="color:var(--accent);text-decoration:none;font-size:11px">Capture</a> ` : '';
-  return `<tr>
+  const ss  = t.ss ? `<a href="${t.ss}" target="_blank" onclick="event.stopPropagation()" style="color:var(--accent);text-decoration:none;font-size:11px">Capture</a> ` : '';
+  return `<tr onclick="openTradeDetail(${t.id})" style="cursor:pointer">
     <td class="c-muted mono" style="font-size:11px">${t.id}</td>
     <td class="mono">${t.date}</td>
     <td class="fw7">${t.actif}</td>
@@ -1551,7 +1663,7 @@ function rowJ(t) {
     <td><span class="badge ${sB}">${t.statut}</span></td>
     <td><span class="badge ${cB}">${t.cote}</span></td>
     <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted);font-size:11px" title="${t.com || ''}">${t.com || '—'}</td>
-    <td>${ss}<button class="btn-icon" onclick="del(${t.id})">&#x2715;</button></td>
+    <td>${ss}<button class="btn-icon" onclick="event.stopPropagation(); del(${t.id})">&#x2715;</button></td>
   </tr>`;
 }
 
@@ -2014,7 +2126,7 @@ function renderAccTradesTable(s) {
     const sB = t.statut === 'TP' ? 'b-tp' : t.statut === 'SL' ? 'b-sl' : 'b-be';
     const cB = t.cote === 'A+' ? 'b-ap' : t.cote === 'A' ? 'b-a' : 'b-b';
     const setupLbl = t.setup === 'Setup 1 - Day' ? 'Day' : t.setup === 'Setup 2 - ROB' ? 'ROB' : t.setup === 'Setup 4 - Intraday' ? 'Intraday' : 'Scalp';
-    return `<tr>
+    return `<tr onclick="openTradeDetail(${t.id})" style="cursor:pointer">
       <td class="c-muted mono" style="font-size:11px">${t.id}</td>
       <td class="mono">${t.date}</td>
       <td class="fw7">${t.actif}</td>
