@@ -475,6 +475,32 @@ tr:hover td { background: rgba(255,255,255,.02); }
 .c-muted  { color: var(--muted); }
 .fw7 { font-weight: 700; }
 .mono { font-family: 'SF Mono','Fira Code','Cascadia Code',monospace; font-variant-numeric: tabular-nums; }
+
+/* ── COMPTES ── */
+.acc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 16px; }
+.acc-card {
+  background: var(--bg2); border: 1px solid var(--border); border-radius: 8px;
+  padding: 20px; cursor: pointer; transition: all .15s; position: relative; overflow: hidden;
+}
+.acc-card:hover { border-color: var(--border2); transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,.25); }
+.acc-card.danger { border-color: rgba(217,79,79,.4); }
+.acc-card.warn   { border-color: rgba(196,123,42,.4); }
+.acc-name { font-size: 14px; font-weight: 700; padding-right: 90px; }
+.acc-size-lbl { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin: 3px 0 14px; }
+.acc-balance { font-size: 27px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.acc-gain { font-size: 12px; font-weight: 700; margin-top: 3px; }
+.acc-bars { margin-top: 16px; display: flex; flex-direction: column; gap: 10px; }
+.acc-bar-row { display: flex; justify-content: space-between; font-size: 9px; color: var(--muted); margin-bottom: 3px; text-transform: uppercase; letter-spacing: .05em; font-weight: 700; }
+.acc-bar-wrap { background: var(--bg4); border-radius: 3px; height: 6px; overflow: hidden; }
+.acc-bar-fill { height: 100%; border-radius: 3px; transition: width .4s; }
+.acc-status-badge { position: absolute; top: 20px; right: 20px; font-size: 8.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; padding: 3px 8px; border-radius: 3px; white-space: nowrap; }
+.acc-stat-hero { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 16px; }
+.acc-hero-box { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 16px 18px; }
+.acc-hero-val { font-size: 23px; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1.2; }
+.acc-hero-lbl { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; margin-top: 5px; }
+.acc-danger-box { background: rgba(217,79,79,.06) !important; border-color: rgba(217,79,79,.25) !important; }
+.acc-good-box   { background: rgba(46,168,74,.06) !important; border-color: rgba(46,168,74,.25) !important; }
+@media (max-width: 800px) { .acc-stat-hero { grid-template-columns: repeat(2,1fr); } }
 </style>
 </head>
 <body>
@@ -482,7 +508,8 @@ tr:hover td { background: rgba(255,255,255,.02); }
 <header class="hdr">
   <div class="logo">THÉO <span>/</span> DASHBOARD</div>
   <nav class="nav">
-    <button class="ntab on"  onclick="go('checklist',this)">Checklist</button>
+    <button class="ntab on"  onclick="go('accounts',this)">Comptes</button>
+    <button class="ntab"     onclick="go('checklist',this)">Checklist</button>
     <button class="ntab"     onclick="go('journal',this)">Journal</button>
     <button class="ntab"     onclick="go('backtest',this)">Backtest</button>
     <button class="ntab"     onclick="go('stats',this)">Stats</button>
@@ -498,11 +525,44 @@ tr:hover td { background: rgba(255,255,255,.02); }
 </header>
 
 <div class="wrap">
+<!-- ══════════════════════════════════════════
+     COMPTES
+══════════════════════════════════════════ -->
+<div class="page on" id="page-accounts">
+
+  <!-- ── LISTE DES COMPTES ── -->
+  <div id="acc-list-view">
+    <div class="sh">
+      <div class="sh-title">Mes Comptes</div>
+      <button class="btn btn-primary btn-sm" onclick="openAccountModal()">+ Nouveau compte</button>
+    </div>
+    <div class="acc-grid" id="acc-grid"></div>
+    <div class="empty" id="acc-empty" style="display:none">
+      <div class="empty-icon">—</div>
+      <div class="empty-text">Aucun compte pour l'instant — ajoute ton premier compte propfirm</div>
+    </div>
+  </div>
+
+  <!-- ── DÉTAIL D'UN COMPTE ── -->
+  <div id="acc-detail-view" style="display:none">
+    <div class="sh">
+      <button class="btn btn-ghost btn-sm" onclick="backToAccounts()">&larr; Retour aux comptes</button>
+      <div class="flex" style="gap:8px">
+        <button class="btn btn-ghost btn-sm" onclick="openAccountModal(selectedAccountId)">Modifier</button>
+        <button class="btn btn-ghost btn-sm" style="border-color:var(--red);color:var(--red)" onclick="deleteAccount(selectedAccountId)">Supprimer</button>
+      </div>
+    </div>
+    <div id="acc-detail-content"></div>
+  </div>
+
+</div>
+
 
 <!-- ══════════════════════════════════════════
      CHECKLIST
 ══════════════════════════════════════════ -->
-<div class="page on" id="page-checklist">
+<div class="page" id="page-checklist">
+
 
   <!-- Sessions -->
   <div class="sess-strip" id="sess-strip"></div>
@@ -1109,11 +1169,43 @@ tr:hover td { background: rgba(255,255,255,.02); }
       </div>
       <div class="fg"><label class="fl">Liquidité visée</label><input type="text" class="fi" id="t-liq" placeholder="PDL, London low..."></div>
       <div class="fg"><label class="fl">Screenshot</label><input type="url" class="fi" id="t-ss" placeholder="https://tradingview.com/x/..."></div>
+      <div class="fg" id="fg-compte" style="display:none"><label class="fl">Compte</label>
+        <select class="fs" id="t-account">
+          <option value="">— Aucun —</option>
+        </select>
+      </div>
+      <div class="fg" id="fg-risque" style="display:none"><label class="fl">Risque %</label><input type="number" class="fi" id="t-risque" step="0.01" placeholder="0.25"></div>
     </div>
     <div class="fg" style="margin-top:4px"><label class="fl">Commentaire</label><textarea class="fta" id="t-com" placeholder="Ce que tu retiens de ce trade..."></textarea></div>
     <div class="flex" style="justify-content:flex-end;gap:8px;margin-top:12px">
       <button class="btn btn-ghost" onclick="closeM()">Annuler</button>
       <button class="btn btn-primary" onclick="saveT()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     MODAL AJOUT / MODIF COMPTE
+══════════════════════════════════════════ -->
+<div class="mo" id="m-account">
+  <div class="modal">
+    <div class="modal-hdr">
+      <span class="modal-title" id="m-account-title">Nouveau compte</span>
+      <button class="modal-close" onclick="closeAccountModal()">&#x2715;</button>
+    </div>
+    <input type="hidden" id="acc-id">
+    <div class="fg"><label class="fl">Nom du compte *</label><input type="text" class="fi" id="acc-name" placeholder="FTMO 100k, MFF 50k..."></div>
+    <div class="fg"><label class="fl">Taille du compte / solde initial ($) *</label><input type="number" class="fi" id="acc-size" step="0.01" placeholder="100000" oninput="accCalc('obj','pct'); accCalc('max','pct');"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="fg"><label class="fl">Objectif (%)</label><input type="number" class="fi" id="acc-objpct" step="0.01" placeholder="10" oninput="accCalc('obj','pct')"></div>
+      <div class="fg"><label class="fl">Objectif ($)</label><input type="number" class="fi" id="acc-objusd" step="0.01" placeholder="10000" oninput="accCalc('obj','usd')"></div>
+      <div class="fg"><label class="fl">Perte max (%)</label><input type="number" class="fi" id="acc-maxpct" step="0.01" placeholder="10" oninput="accCalc('max','pct')"></div>
+      <div class="fg"><label class="fl">Perte max ($)</label><input type="number" class="fi" id="acc-maxusd" step="0.01" placeholder="10000" oninput="accCalc('max','usd')"></div>
+    </div>
+    <div class="fg"><label class="fl">Solde actuel ($)</label><input type="number" class="fi" id="acc-start" step="0.01" placeholder="Laisser vide = solde initial"></div>
+    <div class="flex" style="justify-content:flex-end;gap:8px;margin-top:12px">
+      <button class="btn btn-ghost" onclick="closeAccountModal()">Annuler</button>
+      <button class="btn btn-primary" onclick="saveAccount()">Enregistrer</button>
     </div>
   </div>
 </div>
@@ -1130,6 +1222,11 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // ─── STATE ───────────────────────────────────────────────────────
 let trades = JSON.parse(localStorage.getItem('theo_v3') || '[]');
+let accounts = JSON.parse(localStorage.getItem('theo_accounts') || '[]');
+let selectedAccountId = null;
+let accPnlPeriod = 'day';
+let accChartEQ = null;
+let accChartPnl = null;
 let currentMode  = 'backtest';
 let currentSetup = 'day';
 let statsFilters = new Set(['all']); // multi-select: 'all' | 'reel' | 'backtest'
@@ -1183,6 +1280,12 @@ function go(name, btn) {
   document.querySelectorAll('.ntab').forEach(b => b.classList.remove('on'));
   document.getElementById('page-' + name).classList.add('on');
   btn.classList.add('on');
+  if (name === 'accounts') {
+    selectedAccountId = null;
+    document.getElementById('acc-detail-view').style.display = 'none';
+    document.getElementById('acc-list-view').style.display = 'block';
+    renderAccounts();
+  }
   if (name === 'journal')   renderJ();
   if (name === 'backtest')  renderBT();
   if (name === 'stats')     renderStats();
@@ -1339,7 +1442,10 @@ function quickAdd(setup) {
   openAdd(currentMode);
   setTimeout(() => {
     document.getElementById('t-setup').value = setup === 'day' ? 'Setup 1 - Day' : setup === 'rob' ? 'Setup 2 - ROB' : 'Setup 4 - Intraday';
-    if (['A+','A','B'].includes(cote)) document.getElementById('t-cote').value = cote;
+    if (['A+','A','B'].includes(cote)) {
+      document.getElementById('t-cote').value = cote;
+      if (currentMode === 'reel') document.getElementById('t-risque').value = cote === 'B' ? '0.125' : '0.25';
+    }
   }, 50);
 }
 
@@ -1349,6 +1455,14 @@ function openAdd(mode) {
   document.getElementById('m-title').textContent = mode === 'reel' ? 'Nouveau trade réel' : 'Nouveau backtest';
   document.getElementById('t-date').value = new Date().toISOString().split('T')[0];
   ['t-rrc','t-rrr','t-com','t-ss','t-liq'].forEach(id => document.getElementById(id).value = '');
+  const isReel = mode === 'reel';
+  document.getElementById('fg-compte').style.display = isReel ? '' : 'none';
+  document.getElementById('fg-risque').style.display = isReel ? '' : 'none';
+  if (isReel) {
+    populateAccountSelect();
+    document.getElementById('t-account').value = '';
+    document.getElementById('t-risque').value = '';
+  }
   document.getElementById('m-add').classList.add('on');
 }
 function closeM() { document.getElementById('m-add').classList.remove('on'); }
@@ -1359,8 +1473,11 @@ function saveT() {
   const rrr  = document.getElementById('t-rrr').value;
   if (!date || rrr === '') { alert('Date et RR réalisé obligatoires.'); return; }
   const id = trades.length ? Math.max(...trades.map(t => t.id)) + 1 : 1;
+  const mode = document.getElementById('t-mode').value;
+  const accVal  = mode === 'reel' ? document.getElementById('t-account').value : '';
+  const riskVal = mode === 'reel' ? document.getElementById('t-risque').value : '';
   const newTrade = {
-    id, mode: document.getElementById('t-mode').value,
+    id, mode,
     date, actif: document.getElementById('t-actif').value,
     setup: document.getElementById('t-setup').value,
     sens: document.getElementById('t-sens').value,
@@ -1375,20 +1492,31 @@ function saveT() {
     liq: document.getElementById('t-liq').value,
     ss: document.getElementById('t-ss').value,
     com: document.getElementById('t-com').value,
+    accountId: accVal !== '' ? parseInt(accVal) : null,
+    risque: riskVal !== '' ? parseFloat(riskVal) : null,
   };
   trades.push(newTrade);
   saveTrades();
   pushTrade(newTrade);
   closeM();
   renderBT(); renderJ();
+  if (newTrade.accountId != null) refreshAccountsViewIfNeeded(newTrade.accountId);
+}
+
+function refreshAccountsViewIfNeeded(accountId) {
+  const onAccPage = document.getElementById('page-accounts')?.classList.contains('on');
+  if (!onAccPage) return;
+  if (selectedAccountId === accountId) renderAccountDetail(); else renderAccounts();
 }
 
 function del(id) {
   if (!confirm('Supprimer ce trade ?')) return;
+  const t = trades.find(x => x.id === id);
   trades = trades.filter(t => t.id !== id);
   saveTrades();
   deleteTradeRemote(id);
   renderBT(); renderJ();
+  if (t && t.accountId != null) refreshAccountsViewIfNeeded(t.accountId);
 }
 
 // ─── RENDER ROWS ─────────────────────────────────────────────────
@@ -1621,6 +1749,446 @@ function renderStats() {
     }
   });
 }
+
+// ─── COMPTES ─────────────────────────────────────────────────────
+function fmtUSD(v) {
+  v = v || 0;
+  return (v < 0 ? '-' : '') + '$' + Math.abs(v).toLocaleString('fr-FR', { maximumFractionDigits: 0 });
+}
+
+function populateAccountSelect() {
+  const sel = document.getElementById('t-account');
+  if (!sel) return;
+  const current = sel.value;
+  sel.innerHTML = '<option value="">— Aucun —</option>' + accounts.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
+  if ([...sel.options].some(o => o.value === current)) sel.value = current;
+}
+
+function accountTrades(accId) {
+  return trades.filter(t => t.mode === 'reel' && t.accountId === accId)
+    .slice()
+    .sort((a, b) => new Date(a.date) - new Date(b.date) || a.id - b.id);
+}
+
+function computeAccountStats(acc) {
+  const ts = accountTrades(acc.id);
+  let bal = acc.startBalance;
+  const curve = [{ date: acc.createdAt ? acc.createdAt.slice(0, 10) : (ts[0] ? ts[0].date : ''), balance: bal, pnl: 0 }];
+  let wins = 0, losses = 0, be = 0, riskSum = 0, riskN = 0, rrSum = 0, winRRSum = 0, winN = 0;
+
+  ts.forEach(t => {
+    const risk = (t.risque != null && t.risque !== '') ? parseFloat(t.risque) : 0;
+    const pnl = bal * (risk / 100) * t.rrr;
+    bal += pnl;
+    curve.push({ date: t.date, balance: +bal.toFixed(2), pnl: +pnl.toFixed(2) });
+    if (t.statut === 'TP') { wins++; winRRSum += t.rrr; winN++; }
+    else if (t.statut === 'SL') losses++;
+    else be++;
+    if (risk > 0) { riskSum += risk; riskN++; }
+    rrSum += t.rrr;
+  });
+
+  const gainDollar = +(bal - acc.size).toFixed(2);
+  const gainPct = acc.size ? gainDollar / acc.size * 100 : 0;
+  const drawdown = +Math.max(0, acc.size - bal).toFixed(2);
+  const nEff = wins + losses;
+  const winrate = nEff ? wins / nEff * 100 : 0;
+  const avgRisk = riskN ? riskSum / riskN : 0;
+  const avgRR = ts.length ? rrSum / ts.length : 0;
+  const avgWinRR = winN ? winRRSum / winN : 0;
+
+  // Simulation : combien de SL (au risque moyen) avant d'atteindre la perte max
+  let slCount = 0;
+  if (acc.maxLossDollar > 0) {
+    let simBal = bal;
+    const riskForSim = avgRisk > 0 ? avgRisk : 0.25;
+    while (slCount < 500) {
+      const dd = Math.max(0, acc.size - simBal);
+      if (dd >= acc.maxLossDollar) break;
+      simBal -= simBal * (riskForSim / 100);
+      slCount++;
+    }
+  }
+  // Simulation : combien de TP (au RR moyen des gagnants) avant d'atteindre l'objectif
+  let tpCount = 0;
+  if (acc.objDollar > 0) {
+    let simBal2 = bal;
+    const riskForSim = avgRisk > 0 ? avgRisk : 0.25;
+    const rrForSim = avgWinRR > 0 ? avgWinRR : 2;
+    while (tpCount < 500) {
+      const g = simBal2 - acc.size;
+      if (g >= acc.objDollar) break;
+      simBal2 += simBal2 * (riskForSim / 100) * rrForSim;
+      tpCount++;
+      if (simBal2 <= 0) break;
+    }
+  }
+
+  const cstat = cs(ts);
+  return { ts, curve, balance: +bal.toFixed(2), gainDollar, gainPct, drawdown, winrate, avgRisk, avgRR, avgWinRR, nEff, wins, losses, be, slCount, tpCount, cstat };
+}
+
+function accountStatus(acc, s) {
+  const objPct = acc.objDollar > 0 ? Math.max(0, Math.min(100, s.gainDollar / acc.objDollar * 100)) : 0;
+  const maxPct = acc.maxLossDollar > 0 ? Math.max(0, Math.min(100, s.drawdown / acc.maxLossDollar * 100)) : 0;
+  let cls = 'good', txt = 'SAIN', bg = 'rgba(46,168,74,.15)', color = 'var(--green)';
+  if (maxPct >= 100)      { cls = 'danger'; txt = 'LIMITE ATTEINTE'; bg = 'rgba(217,79,79,.18)'; color = 'var(--red)'; }
+  else if (maxPct >= 70)  { cls = 'warn';   txt = 'PRUDENCE';        bg = 'rgba(196,123,42,.18)'; color = 'var(--orange)'; }
+  else if (objPct >= 100) { cls = 'good';   txt = 'OBJECTIF ATTEINT'; bg = 'rgba(200,148,26,.18)'; color = 'var(--gold)'; }
+  return { objPct, maxPct, cls, txt, bg, color };
+}
+
+function renderAccounts() {
+  const grid = document.getElementById('acc-grid');
+  const empty = document.getElementById('acc-empty');
+  if (!accounts.length) { grid.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  grid.innerHTML = accounts.map(acc => {
+    const s = computeAccountStats(acc);
+    const st = accountStatus(acc, s);
+    const gainCl = s.gainDollar >= 0 ? 'c-green' : 'c-red';
+    return `<div class="acc-card ${st.cls}" onclick="openAccountDetail(${acc.id})">
+      <span class="acc-status-badge" style="background:${st.bg};color:${st.color}">${st.txt}</span>
+      <div class="acc-name">${acc.name}</div>
+      <div class="acc-size-lbl">Taille : ${fmtUSD(acc.size)}</div>
+      <div class="acc-balance">${fmtUSD(s.balance)}</div>
+      <div class="acc-gain ${gainCl}">${s.gainDollar >= 0 ? '+' : ''}${fmtUSD(s.gainDollar)} (${s.gainPct >= 0 ? '+' : ''}${s.gainPct.toFixed(2)}%)</div>
+      <div class="acc-bars">
+        <div>
+          <div class="acc-bar-row"><span>Objectif</span><span>${st.objPct.toFixed(0)}%</span></div>
+          <div class="acc-bar-wrap"><div class="acc-bar-fill" style="width:${st.objPct}%;background:var(--gold)"></div></div>
+        </div>
+        <div>
+          <div class="acc-bar-row"><span>Max Loss</span><span>${st.maxPct.toFixed(0)}%</span></div>
+          <div class="acc-bar-wrap"><div class="acc-bar-fill" style="width:${st.maxPct}%;background:var(--red)"></div></div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openAccountDetail(id) {
+  selectedAccountId = id;
+  document.getElementById('acc-list-view').style.display = 'none';
+  document.getElementById('acc-detail-view').style.display = 'block';
+  renderAccountDetail();
+}
+function backToAccounts() {
+  selectedAccountId = null;
+  document.getElementById('acc-detail-view').style.display = 'none';
+  document.getElementById('acc-list-view').style.display = 'block';
+  renderAccounts();
+}
+function setAccPnlPeriod(p) { accPnlPeriod = p; renderAccountDetail(); }
+
+function renderAccountDetail() {
+  const acc = accounts.find(a => a.id === selectedAccountId);
+  if (!acc) { backToAccounts(); return; }
+  const s = computeAccountStats(acc);
+  const st = accountStatus(acc, s);
+  const gainCl = s.gainDollar >= 0 ? 'c-green' : 'c-red';
+
+  const el = document.getElementById('acc-detail-content');
+  el.innerHTML = `
+    <div class="sh" style="margin-top:16px">
+      <div>
+        <div class="sh-title">${acc.name}</div>
+        <div class="c-muted" style="font-size:11px;margin-top:2px">Taille initiale : ${fmtUSD(acc.size)} &nbsp;•&nbsp; Ouvert le ${acc.createdAt ? new Date(acc.createdAt).toLocaleDateString('fr-FR') : '—'}</div>
+      </div>
+      <span class="acc-status-badge" style="position:static;background:${st.bg};color:${st.color}">${st.txt}</span>
+    </div>
+
+    <div class="acc-stat-hero">
+      <div class="acc-hero-box">
+        <div class="acc-hero-val">${fmtUSD(s.balance)}</div>
+        <div class="acc-hero-lbl">Solde actuel</div>
+      </div>
+      <div class="acc-hero-box">
+        <div class="acc-hero-val ${gainCl}">${s.gainDollar >= 0 ? '+' : ''}${fmtUSD(s.gainDollar)}</div>
+        <div class="acc-hero-lbl">Gain (${s.gainPct >= 0 ? '+' : ''}${s.gainPct.toFixed(2)}%)</div>
+      </div>
+      <div class="acc-hero-box">
+        <div class="acc-hero-val ${s.winrate >= 50 ? 'c-green' : 'c-red'}">${s.nEff ? s.winrate.toFixed(1) + '%' : '—'}</div>
+        <div class="acc-hero-lbl">Winrate (${s.wins}W / ${s.losses}L / ${s.be}BE)</div>
+      </div>
+      <div class="acc-hero-box">
+        <div class="acc-hero-val c-gold">${s.avgRisk.toFixed(2)}%</div>
+        <div class="acc-hero-lbl">Risque moyen / trade</div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+      <div class="card" style="margin-bottom:0">
+        <div class="flex" style="justify-content:space-between;margin-bottom:8px">
+          <span class="label">Objectif</span>
+          <span class="mono c-gold fw7">${fmtUSD(Math.max(0, s.gainDollar))} / ${fmtUSD(acc.objDollar || 0)}</span>
+        </div>
+        <div class="prog-wrap" style="height:8px"><div class="prog-bar" style="width:${st.objPct}%;background:var(--gold)"></div></div>
+        <div style="font-size:10px;color:var(--muted);margin-top:6px">${st.objPct.toFixed(1)}% de l'objectif (${acc.objPct || 0}%) atteint</div>
+      </div>
+      <div class="card" style="margin-bottom:0">
+        <div class="flex" style="justify-content:space-between;margin-bottom:8px">
+          <span class="label">Max Loss</span>
+          <span class="mono c-red fw7">${fmtUSD(s.drawdown)} / ${fmtUSD(acc.maxLossDollar || 0)}</span>
+        </div>
+        <div class="prog-wrap" style="height:8px"><div class="prog-bar" style="width:${st.maxPct}%;background:var(--red)"></div></div>
+        <div style="font-size:10px;color:var(--muted);margin-top:6px">${st.maxPct.toFixed(1)}% de la perte max (${acc.maxLossPct || 0}%) utilisée</div>
+      </div>
+    </div>
+
+    <div class="g2" style="margin-bottom:16px">
+      <div class="card acc-danger-box" style="margin-bottom:0">
+        <div class="stat-val c-red mono">${s.slCount >= 500 ? '∞' : s.slCount}</div>
+        <div class="stat-lbl">SL restants avant Max Loss <span class="c-muted">(à ${s.avgRisk ? s.avgRisk.toFixed(2) : '0.25'}% de risque)</span></div>
+      </div>
+      <div class="card acc-good-box" style="margin-bottom:0">
+        <div class="stat-val c-green mono">${s.tpCount >= 500 ? '∞' : s.tpCount}</div>
+        <div class="stat-lbl">TP restants avant Objectif <span class="c-muted">(à ${s.avgWinRR ? s.avgWinRR.toFixed(2) : '2.00'}R moyen)</span></div>
+      </div>
+    </div>
+
+    <div class="g4" style="margin-bottom:16px">
+      <div class="stat-box"><div class="stat-val c-accent mono">${s.cstat.rrMoy}R</div><div class="stat-lbl">RR Moyen</div></div>
+      <div class="stat-box"><div class="stat-val mono ${s.cstat.rrCum >= 0 ? 'c-green' : 'c-red'}">${s.cstat.rrCum > 0 ? '+' : ''}${s.cstat.rrCum}R</div><div class="stat-lbl">RR Cumulé</div></div>
+      <div class="stat-box"><div class="stat-val c-gold mono">${s.cstat.pf}</div><div class="stat-lbl">Profit Factor</div></div>
+      <div class="stat-box"><div class="stat-val mono">${s.ts.length}</div><div class="stat-lbl">Trades assignés</div></div>
+    </div>
+
+    <div class="card">
+      <div class="label" style="margin-bottom:14px">Courbe d'équité</div>
+      <canvas id="acc-ch-eq" height="140"></canvas>
+      <div class="empty" id="acc-ch-eq-empty" style="display:none;padding:32px"><div class="empty-text">Aucun trade assigné à ce compte pour l'instant</div></div>
+    </div>
+
+    <div class="card">
+      <div class="flex" style="justify-content:space-between;margin-bottom:14px">
+        <span class="label">Résultats</span>
+        <div class="flex" style="gap:4px">
+          <button class="btn btn-ghost btn-sm ${accPnlPeriod === 'day' ? 'btn-active' : ''}" onclick="setAccPnlPeriod('day')">Jour</button>
+          <button class="btn btn-ghost btn-sm ${accPnlPeriod === 'week' ? 'btn-active' : ''}" onclick="setAccPnlPeriod('week')">Semaine</button>
+          <button class="btn btn-ghost btn-sm ${accPnlPeriod === 'month' ? 'btn-active' : ''}" onclick="setAccPnlPeriod('month')">Mois</button>
+        </div>
+      </div>
+      <canvas id="acc-ch-pnl" height="140"></canvas>
+      <div class="empty" id="acc-ch-pnl-empty" style="display:none;padding:32px"><div class="empty-text">Aucune donnée</div></div>
+    </div>
+
+    <div class="card">
+      <div class="label" style="margin-bottom:14px">Trades du compte</div>
+      <div class="scroll">
+        <table>
+          <thead><tr>
+            <th>#</th><th>Date</th><th>Actif</th><th>Sens</th><th>Setup</th>
+            <th>Risque</th><th>RR</th><th>P&amp;L</th><th>Statut</th><th>Cote</th>
+          </tr></thead>
+          <tbody id="acc-tbody"></tbody>
+        </table>
+      </div>
+      <div class="empty" id="acc-tbody-empty" style="display:none">
+        <div class="empty-icon">—</div><div class="empty-text">Aucun trade assigné</div>
+      </div>
+    </div>
+  `;
+
+  renderAccTradesTable(s);
+  renderAccEquityChart(s);
+  renderAccPnlChart(s);
+}
+
+function renderAccTradesTable(s) {
+  const tbody = document.getElementById('acc-tbody');
+  const empty = document.getElementById('acc-tbody-empty');
+  if (!s.ts.length) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  tbody.innerHTML = s.ts.map((t, i) => {
+    const pnl = s.curve[i + 1].pnl;
+    const pnlCl = pnl >= 0 ? 'c-green' : 'c-red';
+    const sB = t.statut === 'TP' ? 'b-tp' : t.statut === 'SL' ? 'b-sl' : 'b-be';
+    const cB = t.cote === 'A+' ? 'b-ap' : t.cote === 'A' ? 'b-a' : 'b-b';
+    const setupLbl = t.setup === 'Setup 1 - Day' ? 'Day' : t.setup === 'Setup 2 - ROB' ? 'ROB' : t.setup === 'Setup 4 - Intraday' ? 'Intraday' : 'Scalp';
+    return `<tr>
+      <td class="c-muted mono" style="font-size:11px">${t.id}</td>
+      <td class="mono">${t.date}</td>
+      <td class="fw7">${t.actif}</td>
+      <td class="${t.sens === 'Achat' ? 'c-green' : 'c-red'} fw7" style="font-size:12px">${t.sens}</td>
+      <td class="c-muted" style="font-size:11px">${setupLbl}</td>
+      <td class="mono c-muted" style="font-size:11px">${t.risque != null && t.risque !== '' ? t.risque + '%' : '—'}</td>
+      <td>${rrCell(t.rrr)}</td>
+      <td class="${pnlCl} fw7 mono">${pnl >= 0 ? '+' : ''}${fmtUSD(pnl)}</td>
+      <td><span class="badge ${sB}">${t.statut}</span></td>
+      <td><span class="badge ${cB}">${t.cote}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+function renderAccEquityChart(s) {
+  const canvas = document.getElementById('acc-ch-eq');
+  const empty = document.getElementById('acc-ch-eq-empty');
+  if (accChartEQ) { accChartEQ.destroy(); accChartEQ = null; }
+  if (s.curve.length < 2) { canvas.style.display = 'none'; empty.style.display = 'block'; return; }
+  canvas.style.display = 'block'; empty.style.display = 'none';
+  const labels = s.curve.map((c, i) => i === 0 ? 'Départ' : '#' + i);
+  const data = s.curve.map(c => c.balance);
+  accChartEQ = new Chart(canvas.getContext('2d'), {
+    type: 'line',
+    data: { labels, datasets: [{
+      label: 'Solde', data,
+      borderColor: '#4a8fe8', backgroundColor: 'rgba(74,143,232,.08)',
+      borderWidth: 1.5, pointRadius: 2, fill: true, tension: .3
+    }] },
+    options: {
+      responsive: true, plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: '#1e2738' }, ticks: { color: '#546278', font: { size: 10 } } },
+        y: { grid: { color: '#1e2738' }, ticks: { color: '#546278', font: { size: 10 } } }
+      }
+    }
+  });
+}
+
+function periodKey(dateStr, period) {
+  if (period === 'day') return dateStr;
+  if (period === 'month') return dateStr.slice(0, 7);
+  const d = new Date(dateStr);
+  const dt = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const dayNum = (dt.getUTCDay() + 6) % 7;
+  dt.setUTCDate(dt.getUTCDate() - dayNum + 3);
+  const firstThursday = new Date(Date.UTC(dt.getUTCFullYear(), 0, 4));
+  const week = 1 + Math.round(((dt - firstThursday) / 86400000 - 3 + ((firstThursday.getUTCDay() + 6) % 7)) / 7);
+  return dt.getUTCFullYear() + '-S' + String(week).padStart(2, '0');
+}
+
+function renderAccPnlChart(s) {
+  const canvas = document.getElementById('acc-ch-pnl');
+  const empty = document.getElementById('acc-ch-pnl-empty');
+  if (accChartPnl) { accChartPnl.destroy(); accChartPnl = null; }
+  if (!s.ts.length) { canvas.style.display = 'none'; empty.style.display = 'block'; return; }
+  canvas.style.display = 'block'; empty.style.display = 'none';
+  const groups = {};
+  s.ts.forEach((t, i) => { const k = periodKey(t.date, accPnlPeriod); groups[k] = (groups[k] || 0) + s.curve[i + 1].pnl; });
+  const keys = Object.keys(groups).sort();
+  const data = keys.map(k => +groups[k].toFixed(2));
+  accChartPnl = new Chart(canvas.getContext('2d'), {
+    type: 'bar',
+    data: { labels: keys, datasets: [{
+      label: 'P&L', data,
+      backgroundColor: data.map(v => v >= 0 ? 'rgba(46,168,74,.7)' : 'rgba(217,79,79,.7)'),
+      borderRadius: 3
+    }] },
+    options: {
+      responsive: true, plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display: false }, ticks: { color: '#546278', font: { size: 9 } } },
+        y: { grid: { color: '#1e2738' }, ticks: { color: '#546278', font: { size: 10 } } }
+      }
+    }
+  });
+}
+
+function accCalc(which, from) {
+  const size = parseFloat(document.getElementById('acc-size').value) || 0;
+  const pctEl = document.getElementById('acc-' + which + 'pct');
+  const usdEl = document.getElementById('acc-' + which + 'usd');
+  if (size <= 0) return;
+  if (from === 'pct') {
+    const pct = parseFloat(pctEl.value); if (isNaN(pct)) return;
+    usdEl.value = (size * pct / 100).toFixed(2);
+  } else {
+    const usd = parseFloat(usdEl.value); if (isNaN(usd)) return;
+    pctEl.value = (usd / size * 100).toFixed(2);
+  }
+}
+
+function openAccountModal(id) {
+  const editing = id != null;
+  document.getElementById('m-account-title').textContent = editing ? 'Modifier le compte' : 'Nouveau compte';
+  document.getElementById('acc-id').value = editing ? id : '';
+  const acc = editing ? accounts.find(a => a.id === id) : null;
+  document.getElementById('acc-name').value   = acc ? acc.name : '';
+  document.getElementById('acc-size').value   = acc ? acc.size : '';
+  document.getElementById('acc-objpct').value = acc ? acc.objPct : '';
+  document.getElementById('acc-objusd').value = acc ? acc.objDollar : '';
+  document.getElementById('acc-maxpct').value = acc ? acc.maxLossPct : '';
+  document.getElementById('acc-maxusd').value = acc ? acc.maxLossDollar : '';
+  document.getElementById('acc-start').value  = acc ? acc.startBalance : '';
+  document.getElementById('m-account').classList.add('on');
+}
+function closeAccountModal() { document.getElementById('m-account').classList.remove('on'); }
+
+function saveAccount() {
+  const name = document.getElementById('acc-name').value.trim();
+  const size = parseFloat(document.getElementById('acc-size').value);
+  if (!name || !size) { alert('Nom et taille du compte obligatoires.'); return; }
+  const idVal = document.getElementById('acc-id').value;
+  const editing = idVal !== '';
+  const startRaw = document.getElementById('acc-start').value;
+  const acc = {
+    id: editing ? parseInt(idVal) : (accounts.length ? Math.max(...accounts.map(a => a.id)) + 1 : 1),
+    name, size,
+    objPct: parseFloat(document.getElementById('acc-objpct').value) || 0,
+    objDollar: parseFloat(document.getElementById('acc-objusd').value) || 0,
+    maxLossPct: parseFloat(document.getElementById('acc-maxpct').value) || 0,
+    maxLossDollar: parseFloat(document.getElementById('acc-maxusd').value) || 0,
+    startBalance: startRaw !== '' ? parseFloat(startRaw) : size,
+    createdAt: editing ? accounts.find(a => a.id === parseInt(idVal)).createdAt : new Date().toISOString(),
+  };
+  accounts = editing ? accounts.map(a => a.id === acc.id ? acc : a) : [...accounts, acc];
+  saveAccounts();
+  pushAccount(acc);
+  closeAccountModal();
+  renderAccounts();
+  populateAccountSelect();
+  if (selectedAccountId === acc.id) renderAccountDetail();
+}
+
+function deleteAccount(id) {
+  if (!confirm('Supprimer ce compte ? Les trades assignés seront désassignés (mais conservés dans le journal).')) return;
+  accounts = accounts.filter(a => a.id !== id);
+  trades.forEach(t => { if (t.accountId === id) t.accountId = null; });
+  saveAccounts(); saveTrades();
+  deleteAccountRemote(id);
+  pushTrades(trades);
+  populateAccountSelect();
+  backToAccounts();
+}
+
+// ─── SYNC SUPABASE (COMPTES) ───────────────────────────────────
+function saveAccounts() { localStorage.setItem('theo_accounts', JSON.stringify(accounts)); }
+
+async function pushAccount(a) {
+  try { const { error } = await sb.from('accounts').upsert({ id: a.id, data: a }); if (error) console.warn('Supabase accounts upsert échoué :', error.message); }
+  catch (e) { console.warn('Supabase accounts upsert échoué :', e.message); }
+}
+async function pushAccounts(list) {
+  if (!list.length) return;
+  try { const rows = list.map(a => ({ id: a.id, data: a })); const { error } = await sb.from('accounts').upsert(rows); if (error) console.warn('Supabase accounts upsert (bulk) échoué :', error.message); }
+  catch (e) { console.warn('Supabase accounts upsert (bulk) échoué :', e.message); }
+}
+async function deleteAccountRemote(id) {
+  try { const { error } = await sb.from('accounts').delete().eq('id', id); if (error) console.warn('Supabase accounts delete échoué :', error.message); }
+  catch (e) { console.warn('Supabase accounts delete échoué :', e.message); }
+}
+async function syncAccountsFromRemote() {
+  try {
+    const { data, error } = await sb.from('accounts').select('*').order('id', { ascending: true });
+    if (error) throw error;
+    accounts = data.map(r => r.data);
+    localStorage.setItem('theo_accounts', JSON.stringify(accounts));
+    populateAccountSelect();
+    const onAccPage = document.getElementById('page-accounts')?.classList.contains('on');
+    if (onAccPage) { if (selectedAccountId != null) renderAccountDetail(); else renderAccounts(); }
+  } catch (e) {
+    console.warn('Sync Supabase (comptes) échoué, utilisation des données locales :', e.message);
+  }
+}
+let _realtimeAccSub = null;
+function subscribeAccountsRealtime() {
+  if (_realtimeAccSub) return;
+  _realtimeAccSub = sb.channel('accounts-changes')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'accounts' }, () => { syncAccountsFromRemote(); })
+    .subscribe();
+}
+
 
 // ─── CALENDAR ────────────────────────────────────────────────────
 const MN = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
