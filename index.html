@@ -1256,7 +1256,10 @@ tr[onclick]:hover { background: var(--bg3); }
 <div class="trade-detail-ov" id="trade-detail-ov">
   <div class="td-topbar">
     <button class="btn btn-ghost btn-sm" onclick="closeTradeDetail()">&larr; Retour</button>
-    <button class="btn btn-ghost btn-sm" style="border-color:var(--red);color:var(--red)" onclick="deleteTradeFromDetail()">Supprimer</button>
+    <div class="flex" style="gap:8px">
+      <button class="btn btn-ghost btn-sm" onclick="editTradeFromDetail()">Modifier</button>
+      <button class="btn btn-ghost btn-sm" style="border-color:var(--red);color:var(--red)" onclick="deleteTradeFromDetail()">Supprimer</button>
+    </div>
   </div>
   <div class="td-body">
     <div class="td-shot" id="td-shot"></div>
@@ -1529,11 +1532,51 @@ function quickAdd(setup) {
 }
 
 // ─── MODAL ───────────────────────────────────────────────────────
+let editingTradeId = null;
+function openEditTrade(id) {
+  const t = trades.find(x => x.id === id);
+  if (!t) return;
+  editingTradeId = id;
+  document.getElementById('t-mode').value = t.mode;
+  document.getElementById('m-title').textContent = 'Modifier le trade';
+  document.getElementById('t-date').value = t.date || '';
+  document.getElementById('t-actif').value = t.actif;
+  document.getElementById('t-setup').value = t.setup;
+  document.getElementById('t-sens').value = t.sens;
+  document.getElementById('t-kz').value = t.kz;
+  document.getElementById('t-tfa').value = t.tfa;
+  document.getElementById('t-tfe').value = t.tfe;
+  document.getElementById('t-heure').value = t.heure || '';
+  document.getElementById('t-rrc').value = t.rrc != null ? t.rrc : '';
+  document.getElementById('t-rrr').value = t.rrr != null ? t.rrr : '';
+  document.getElementById('t-gain').value = t.gain != null ? t.gain : '';
+  document.getElementById('t-statut').value = t.statut;
+  document.getElementById('t-cote').value = t.cote;
+  document.getElementById('t-liq').value = t.liq || '';
+  document.getElementById('t-ss').value = t.ss || '';
+  document.getElementById('t-com').value = t.com || '';
+  const isReelEdit = t.mode === 'reel';
+  document.getElementById('fg-compte').style.display = isReelEdit ? '' : 'none';
+  document.getElementById('fg-risque').style.display = isReelEdit ? '' : 'none';
+  if (isReelEdit) {
+    populateAccountSelect();
+    document.getElementById('t-account').value = t.accountId != null ? String(t.accountId) : '';
+    document.getElementById('t-risque').value = t.risque != null ? t.risque : '';
+  }
+  document.getElementById('m-add').classList.add('on');
+}
+function editTradeFromDetail() {
+  if (tdCurrentId == null) return;
+  const id = tdCurrentId;
+  closeTradeDetail();
+  openEditTrade(id);
+}
 function openAdd(mode) {
+  editingTradeId = null;
   document.getElementById('t-mode').value = mode;
   document.getElementById('m-title').textContent = mode === 'reel' ? 'Nouveau trade réel' : 'Nouveau backtest';
   document.getElementById('t-date').value = new Date().toISOString().split('T')[0];
-  ['t-rrc','t-rrr','t-com','t-ss','t-liq'].forEach(id => document.getElementById(id).value = '');
+  ['t-rrc','t-rrr','t-gain','t-com','t-ss','t-liq'].forEach(id => document.getElementById(id).value = '');
   const isReel = mode === 'reel';
   document.getElementById('fg-compte').style.display = isReel ? '' : 'none';
   document.getElementById('fg-risque').style.display = isReel ? '' : 'none';
@@ -1552,11 +1595,13 @@ function saveT() {
   const rrr  = document.getElementById('t-rrr').value;
   const gainVal = document.getElementById('t-gain').value;
   if (!date || rrr === '') { alert('Date et RR réalisé obligatoires.'); return; }
-  const id = trades.length ? Math.max(...trades.map(t => t.id)) + 1 : 1;
   const mode = document.getElementById('t-mode').value;
   const accVal  = mode === 'reel' ? document.getElementById('t-account').value : '';
   const riskVal = mode === 'reel' ? document.getElementById('t-risque').value : '';
-  const newTrade = {
+  const isEdit = editingTradeId != null;
+  const id = isEdit ? editingTradeId : (trades.length ? Math.max(...trades.map(t => t.id)) + 1 : 1);
+  const oldAccountId = isEdit ? (trades.find(t => t.id === id)?.accountId ?? null) : null;
+  const tradeData = {
     id, mode,
     date, actif: document.getElementById('t-actif').value,
     setup: document.getElementById('t-setup').value,
@@ -1576,12 +1621,20 @@ function saveT() {
     risque: riskVal !== '' ? parseFloat(riskVal) : null,
     gain: gainVal !== '' ? parseFloat(gainVal) : null,
   };
-  trades.push(newTrade);
+  if (isEdit) {
+    const idx = trades.findIndex(t => t.id === id);
+    if (idx !== -1) trades[idx] = tradeData; else trades.push(tradeData);
+    editingTradeId = null;
+  } else {
+    trades.push(tradeData);
+  }
   saveTrades();
-  pushTrade(newTrade);
+  pushTrade(tradeData);
   closeM();
   renderBT(); renderJ();
-  if (newTrade.accountId != null) refreshAccountsViewIfNeeded(newTrade.accountId);
+  if (tradeData.accountId != null) refreshAccountsViewIfNeeded(tradeData.accountId);
+  if (oldAccountId != null && oldAccountId !== tradeData.accountId) refreshAccountsViewIfNeeded(oldAccountId);
+  if (typeof tdCurrentId !== 'undefined' && tdCurrentId === tradeData.id) renderTradeDetail(tradeData);
 }
 
 function refreshAccountsViewIfNeeded(accountId) {
