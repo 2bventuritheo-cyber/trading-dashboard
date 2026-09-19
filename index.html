@@ -6,37 +6,40 @@
 <title>Trading Dashboard — Théo</title>
 <style>
 :root {
-  --bg:     #0a0c10;
-  --bg2:    #0f1117;
-  --bg3:    #161b24;
-  --bg4:    #1c2230;
-  --border: #1e2738;
-  --border2:#2a3448;
-  --text:   #cdd6e8;
-  --muted:  #546278;
-  --dim:    #374357;
-  --accent: #4a8fe8;
-  --green:  #2ea84a;
-  --red:    #d94f4f;
-  --gold:   #c8941a;
-  --orange: #c47b2a;
+  --bg:     #0b0a17;
+  --bg2:    #131024;
+  --bg3:    #1a1630;
+  --bg4:    #221c3d;
+  --border: #2a2444;
+  --border2:#3a3160;
+  --text:   #f1edff;
+  --muted:  #9089b3;
+  --dim:    #4d4570;
+  --accent: #8b5cf6;
+  --green:  #22e6a8;
+  --red:    #ff5c7a;
+  --gold:   #f0a83c;
+  --orange: #ff9f5a;
 }
 
 /* ── Thème Backtest ───────────────────────────────────────────── */
 body.bt-mode {
-  --bg:     #0a0d0a;
-  --bg2:    #0d110d;
-  --bg3:    #141b14;
-  --bg4:    #1a221a;
-  --border: #1e2b1e;
-  --border2:#283828;
-  --accent: #4ab86e;
+  --bg:     #0a0b1c;
+  --bg2:    #0e1024;
+  --bg3:    #151832;
+  --bg4:    #1c2040;
+  --border: #232852;
+  --border2:#2e3568;
+  --accent: #5b7fe8;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  background: var(--bg);
+  background:
+    radial-gradient(1200px 800px at 15% -10%, rgba(139,92,246,.16), transparent 60%),
+    radial-gradient(900px 700px at 100% 0%, rgba(255,92,122,.10), transparent 55%),
+    var(--bg);
   color: var(--text);
   font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
   font-size: 13px;
@@ -69,26 +72,25 @@ body {
 }
 .logo span { color: var(--accent); }
 
-.nav { display: flex; gap: 2px; }
+.nav { display: flex; gap: 4px; background: var(--bg3); padding: 4px; border-radius: 999px; border: 1px solid var(--border); }
 
 .ntab {
   background: none;
   border: none;
   color: var(--muted);
-  padding: 0 14px;
-  height: 48px;
+  padding: 0 16px;
+  height: 36px;
+  border-radius: 999px;
   cursor: pointer;
   font-size: 12px;
   font-weight: 600;
   font-family: inherit;
   letter-spacing: .03em;
   text-transform: uppercase;
-  transition: color .15s;
-  border-bottom: 2px solid transparent;
-  margin-bottom: -1px;
+  transition: all .15s;
 }
 .ntab:hover { color: var(--text); }
-.ntab.on { color: var(--accent); border-bottom-color: var(--accent); }
+.ntab.on { color: #fff; background: linear-gradient(135deg, #8b5cf6, #6d28d9); box-shadow: 0 2px 10px rgba(139,92,246,.4); }
 
 /* ── LAYOUT ── */
 .wrap { max-width: 1000px; margin: 0 auto; padding: 28px 24px; }
@@ -138,12 +140,12 @@ body {
   gap: 12px;
   transition: background .15s;
 }
-.sess-item.active { background: rgba(46,168,74,.07); }
+.sess-item.active { background: rgba(34,230,168,.07); }
 .sess-left { display: flex; flex-direction: column; gap: 1px; }
 .sess-name { font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
 .sess-item.active .sess-name { color: var(--green); }
 .sess-status { font-size: 9px; color: var(--dim); letter-spacing: .04em; }
-.sess-item.active .sess-status { color: rgba(46,168,74,.7); }
+.sess-item.active .sess-status { color: rgba(34,230,168,.7); }
 .sess-clock {
   font-size: 16px;
   font-weight: 800;
@@ -198,7 +200,7 @@ body {
   white-space: nowrap;
 }
 .setup-pill:hover { color: var(--text); border-color: var(--dim); }
-.setup-pill.on { color: var(--accent); border-color: var(--accent); background: rgba(74,143,232,.08); }
+.setup-pill.on { color: var(--accent); border-color: var(--accent); background: rgba(139,92,246,.08); }
 .setup-pill.paused { opacity: .35; cursor: not-allowed; pointer-events: none; }
 
 /* ── CONDITIONS ── */
@@ -217,7 +219,7 @@ body {
 }
 .cond.unlocked { cursor: pointer; }
 .cond.unlocked:hover:not(.done) { background: var(--bg3); border-color: var(--border2); }
-.cond.done { background: rgba(46,168,74,.05); border-color: rgba(46,168,74,.2); }
+.cond.done { background: rgba(34,230,168,.05); border-color: rgba(34,230,168,.2); }
 .cond.locked { opacity: .38; }
 
 .cond-cb {
@@ -259,8 +261,8 @@ body {
   padding: 2px 7px;
   border-radius: 3px;
 }
-.ctag-core { background: rgba(217,79,79,.12); color: var(--red); }
-.ctag-opt  { background: rgba(196,123,42,.12); color: var(--orange); }
+.ctag-core { background: rgba(255,92,122,.12); color: var(--red); }
+.ctag-opt  { background: rgba(255,159,90,.12); color: var(--orange); }
 
 .lock-ic { font-size: 11px; color: var(--dim); }
 
@@ -288,13 +290,13 @@ body {
 .cote-desc { font-size: 12px; color: var(--muted); margin-top: 3px; }
 .cote-risk { font-size: 11px; font-weight: 700; margin-top: 4px; letter-spacing: .03em; }
 
-.cote-AP { border-color: rgba(200,148,26,.35); }
+.cote-AP { border-color: rgba(240,168,60,.35); }
 .cote-AP .cote-letter { color: var(--gold); }
-.cote-A  { border-color: rgba(74,143,232,.35); }
+.cote-A  { border-color: rgba(139,92,246,.35); }
 .cote-A  .cote-letter { color: var(--accent); }
-.cote-B  { border-color: rgba(196,123,42,.35); }
+.cote-B  { border-color: rgba(255,159,90,.35); }
 .cote-B  .cote-letter { color: var(--orange); }
-.cote-NO { border-color: rgba(217,79,79,.3); }
+.cote-NO { border-color: rgba(255,92,122,.3); }
 .cote-NO .cote-letter { color: var(--red); font-size: 16px; padding-top: 8px; line-height: 1.4; }
 .cote-empty .cote-letter { color: var(--dim); font-size: 22px; padding-top: 6px; }
 
@@ -307,11 +309,12 @@ body {
 
 /* ── CARD ── */
 .card {
-  background: var(--bg2);
+  background: linear-gradient(180deg, rgba(255,255,255,.025), rgba(255,255,255,0) 40%), var(--bg2);
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: 14px;
   padding: 20px;
   margin-bottom: 16px;
+  box-shadow: 0 1px 0 rgba(255,255,255,.03) inset, 0 8px 24px rgba(0,0,0,.18);
 }
 
 /* ── BUTTONS ── */
@@ -319,8 +322,8 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 7px 16px;
-  border-radius: 5px;
+  padding: 8px 18px;
+  border-radius: 999px;
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
@@ -331,14 +334,15 @@ body {
   text-decoration: none;
   white-space: nowrap;
 }
-.btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
-.btn-primary:hover { opacity: .85; }
-.btn-active { background: rgba(74,143,232,.15) !important; color: var(--accent) !important; border-color: var(--accent) !important; font-weight: 700; }
-.btn-active:hover { background: rgba(74,143,232,.25) !important; }
+.btn:hover { transform: translateY(-1px); }
+.btn-primary { background: linear-gradient(135deg, #8b5cf6, #6d28d9); color: #fff; border-color: transparent; box-shadow: 0 4px 14px rgba(139,92,246,.35); }
+.btn-primary:hover { filter: brightness(1.1); box-shadow: 0 6px 18px rgba(139,92,246,.45); transform: translateY(-1px); }
+.btn-active { background: rgba(139,92,246,.15) !important; color: var(--accent) !important; border-color: var(--accent) !important; font-weight: 700; }
+.btn-active:hover { background: rgba(139,92,246,.25) !important; }
 .btn-secondary { background: var(--bg3); color: var(--text); border-color: var(--border2); }
 .btn-secondary:hover { border-color: var(--dim); }
 .btn-ghost { background: none; color: var(--muted); border-color: var(--border); }
-.btn-ghost:hover { color: var(--text); border-color: var(--dim); }
+.btn-ghost:hover { color: var(--text); border-color: var(--dim); background: var(--bg3); }
 .btn-sm { padding: 4px 12px; font-size: 11px; }
 .btn-icon { background: none; border: none; cursor: pointer; color: var(--muted); padding: 4px; font-size: 14px; transition: color .15s; }
 .btn-icon:hover { color: var(--red); }
@@ -378,14 +382,14 @@ tr:hover td { background: rgba(255,255,255,.02); }
   letter-spacing: .05em;
   text-transform: uppercase;
 }
-.b-tp  { background: rgba(46,168,74,.15);   color: var(--green);  }
-.b-sl  { background: rgba(217,79,79,.15);   color: var(--red);    }
+.b-tp  { background: rgba(34,230,168,.15);   color: var(--green);  }
+.b-sl  { background: rgba(255,92,122,.15);   color: var(--red);    }
 .b-be  { background: rgba(84,98,120,.15);   color: var(--muted);  }
-.b-ap  { background: rgba(200,148,26,.15);  color: var(--gold);   }
-.b-a   { background: rgba(74,143,232,.15);  color: var(--accent); }
-.b-b   { background: rgba(196,123,42,.15);  color: var(--orange); }
-.b-bt  { background: rgba(74,143,232,.1);   color: var(--accent); }
-.b-rl  { background: rgba(217,79,79,.1);    color: var(--red);    }
+.b-ap  { background: rgba(240,168,60,.15);  color: var(--gold);   }
+.b-a   { background: rgba(139,92,246,.15);  color: var(--accent); }
+.b-b   { background: rgba(255,159,90,.15);  color: var(--orange); }
+.b-bt  { background: rgba(139,92,246,.1);   color: var(--accent); }
+.b-rl  { background: rgba(255,92,122,.1);    color: var(--red);    }
 
 /* ── STATS GRID ── */
 .g4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
@@ -412,9 +416,9 @@ tr:hover td { background: rgba(255,255,255,.02); }
   width: 100%;
   background: var(--bg3);
   border: 1px solid var(--border2);
-  border-radius: 4px;
+  border-radius: 10px;
   color: var(--text);
-  padding: 7px 11px;
+  padding: 8px 12px;
   font-size: 12px;
   font-family: inherit;
   transition: border-color .15s;
@@ -427,14 +431,15 @@ tr:hover td { background: rgba(255,255,255,.02); }
 .mo { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.8); z-index: 200; align-items: center; justify-content: center; }
 .mo.on { display: flex; }
 .modal {
-  background: var(--bg2);
+  background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,0) 30%), var(--bg2);
   border: 1px solid var(--border2);
-  border-radius: 8px;
+  border-radius: 18px;
   padding: 28px;
   width: 660px;
   max-width: 94vw;
   max-height: 92vh;
   overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,.4);
 }
 .modal-hdr {
   display: flex;
@@ -443,7 +448,7 @@ tr:hover td { background: rgba(255,255,255,.02); }
   margin-bottom: 22px;
 }
 .modal-title { font-size: 14px; font-weight: 700; letter-spacing: .01em; }
-.modal-close { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 20px; line-height: 1; padding: 2px 6px; border-radius: 3px; }
+.modal-close { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 20px; line-height: 1; padding: 4px 8px; border-radius: 999px; }
 .modal-close:hover { color: var(--text); background: var(--bg3); }
 
 /* ── EMPTY STATE ── */
@@ -479,12 +484,12 @@ tr:hover td { background: rgba(255,255,255,.02); }
 /* ── COMPTES ── */
 .acc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 16px; }
 .acc-card {
-  background: var(--bg2); border: 1px solid var(--border); border-radius: 8px;
+  background: linear-gradient(180deg, rgba(255,255,255,.025), rgba(255,255,255,0) 40%), var(--bg2); border: 1px solid var(--border); border-radius: 14px;
   padding: 20px; cursor: pointer; transition: all .15s; position: relative; overflow: hidden;
 }
 .acc-card:hover { border-color: var(--border2); transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,.25); }
-.acc-card.danger { border-color: rgba(217,79,79,.4); }
-.acc-card.warn   { border-color: rgba(196,123,42,.4); }
+.acc-card.danger { border-color: rgba(255,92,122,.4); }
+.acc-card.warn   { border-color: rgba(255,159,90,.4); }
 .acc-name { font-size: 14px; font-weight: 700; padding-right: 90px; }
 .acc-size-lbl { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin: 3px 0 14px; }
 .acc-balance { font-size: 27px; font-weight: 800; font-variant-numeric: tabular-nums; }
@@ -498,8 +503,8 @@ tr:hover td { background: rgba(255,255,255,.02); }
 .acc-hero-box { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 16px 18px; }
 .acc-hero-val { font-size: 23px; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1.2; }
 .acc-hero-lbl { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; margin-top: 5px; }
-.acc-danger-box { background: rgba(217,79,79,.06) !important; border-color: rgba(217,79,79,.25) !important; }
-.acc-good-box   { background: rgba(46,168,74,.06) !important; border-color: rgba(46,168,74,.25) !important; }
+.acc-danger-box { background: rgba(255,92,122,.06) !important; border-color: rgba(255,92,122,.25) !important; }
+.acc-good-box   { background: rgba(34,230,168,.06) !important; border-color: rgba(34,230,168,.25) !important; }
 @media (max-width: 800px) { .acc-stat-hero { grid-template-columns: repeat(2,1fr); } }
 </style>
 </head>
@@ -1052,7 +1057,7 @@ tr:hover td { background: rgba(255,255,255,.02); }
       <div class="flex" style="gap:5px"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--green)"></span><span class="label">TP</span></div>
       <div class="flex" style="gap:5px"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--red)"></span><span class="label">SL</span></div>
       <div class="flex" style="gap:5px"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--dim)"></span><span class="label">BE</span></div>
-      <div class="flex" style="gap:5px"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:rgba(217,79,79,.18);border:1px solid rgba(217,79,79,.4)"></span><span class="label">News ★★★</span></div>
+      <div class="flex" style="gap:5px"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:rgba(255,92,122,.18);border:1px solid rgba(255,92,122,.4)"></span><span class="label">News ★★★</span></div>
     </div>
 
     <!-- Entêtes jours -->
@@ -1203,6 +1208,9 @@ tr:hover td { background: rgba(255,255,255,.02); }
       <div class="fg"><label class="fl">Perte max ($)</label><input type="number" class="fi" id="acc-maxusd" step="0.01" placeholder="10000" oninput="accCalc('max','usd')"></div>
     </div>
     <div class="fg"><label class="fl">Solde actuel ($)</label><input type="number" class="fi" id="acc-start" step="0.01" placeholder="Laisser vide = solde initial"></div>
+    <div class="fg"><label class="fl">Risque par défaut (%)</label><input type="number" class="fi" id="acc-defrisk" step="0.01" placeholder="0.25">
+      <div style="font-size:10px;color:var(--muted);margin-top:6px">Utilisé pour les simulations SL/TP tant qu'aucun trade n'est encore assigné à ce compte</div>
+    </div>
     <div class="flex" style="justify-content:flex-end;gap:8px;margin-top:12px">
       <button class="btn btn-ghost" onclick="closeAccountModal()">Annuler</button>
       <button class="btn btn-primary" onclick="saveAccount()">Enregistrer</button>
@@ -1731,11 +1739,11 @@ function renderStats() {
       labels,
       datasets: [{
         label: 'RR Cumulé', data,
-        borderColor: '#4a8fe8',
-        backgroundColor: 'rgba(74,143,232,0.06)',
+        borderColor: '#8b5cf6',
+        backgroundColor: 'rgba(139,92,246,0.06)',
         borderWidth: 1.5,
         pointRadius: 2.5,
-        pointBackgroundColor: data.map(v => v >= 0 ? '#2ea84a' : '#d94f4f'),
+        pointBackgroundColor: data.map(v => v >= 0 ? '#22e6a8' : '#ff5c7a'),
         fill: true, tension: .35
       }]
     },
@@ -1743,8 +1751,8 @@ function renderStats() {
       responsive: true,
       plugins: { legend: { display: false } },
       scales: {
-        x: { grid: { color: '#1e2738' }, ticks: { color: '#546278', font: { size: 10 } } },
-        y: { grid: { color: '#1e2738' }, ticks: { color: '#546278', font: { size: 10 } } }
+        x: { grid: { color: '#2a2444' }, ticks: { color: '#9089b3', font: { size: 10 } } },
+        y: { grid: { color: '#2a2444' }, ticks: { color: '#9089b3', font: { size: 10 } } }
       }
     }
   });
@@ -1801,7 +1809,7 @@ function computeAccountStats(acc) {
   let slCount = 0;
   if (acc.maxLossDollar > 0) {
     let simBal = bal;
-    const riskForSim = avgRisk > 0 ? avgRisk : 0.25;
+    const riskForSim = avgRisk > 0 ? avgRisk : (acc.defaultRisk || 0.25);
     while (slCount < 500) {
       const dd = Math.max(0, acc.size - simBal);
       if (dd >= acc.maxLossDollar) break;
@@ -1813,7 +1821,7 @@ function computeAccountStats(acc) {
   let tpCount = 0;
   if (acc.objDollar > 0) {
     let simBal2 = bal;
-    const riskForSim = avgRisk > 0 ? avgRisk : 0.25;
+    const riskForSim = avgRisk > 0 ? avgRisk : (acc.defaultRisk || 0.25);
     const rrForSim = avgWinRR > 0 ? avgWinRR : 2;
     while (tpCount < 500) {
       const g = simBal2 - acc.size;
@@ -1831,10 +1839,10 @@ function computeAccountStats(acc) {
 function accountStatus(acc, s) {
   const objPct = acc.objDollar > 0 ? Math.max(0, Math.min(100, s.gainDollar / acc.objDollar * 100)) : 0;
   const maxPct = acc.maxLossDollar > 0 ? Math.max(0, Math.min(100, s.drawdown / acc.maxLossDollar * 100)) : 0;
-  let cls = 'good', txt = 'SAIN', bg = 'rgba(46,168,74,.15)', color = 'var(--green)';
-  if (maxPct >= 100)      { cls = 'danger'; txt = 'LIMITE ATTEINTE'; bg = 'rgba(217,79,79,.18)'; color = 'var(--red)'; }
-  else if (maxPct >= 70)  { cls = 'warn';   txt = 'PRUDENCE';        bg = 'rgba(196,123,42,.18)'; color = 'var(--orange)'; }
-  else if (objPct >= 100) { cls = 'good';   txt = 'OBJECTIF ATTEINT'; bg = 'rgba(200,148,26,.18)'; color = 'var(--gold)'; }
+  let cls = 'good', txt = 'SAIN', bg = 'rgba(34,230,168,.15)', color = 'var(--green)';
+  if (maxPct >= 100)      { cls = 'danger'; txt = 'LIMITE ATTEINTE'; bg = 'rgba(255,92,122,.18)'; color = 'var(--red)'; }
+  else if (maxPct >= 70)  { cls = 'warn';   txt = 'PRUDENCE';        bg = 'rgba(255,159,90,.18)'; color = 'var(--orange)'; }
+  else if (objPct >= 100) { cls = 'good';   txt = 'OBJECTIF ATTEINT'; bg = 'rgba(240,168,60,.18)'; color = 'var(--gold)'; }
   return { objPct, maxPct, cls, txt, bg, color };
 }
 
@@ -1939,7 +1947,7 @@ function renderAccountDetail() {
     <div class="g2" style="margin-bottom:16px">
       <div class="card acc-danger-box" style="margin-bottom:0">
         <div class="stat-val c-red mono">${s.slCount >= 500 ? '∞' : s.slCount}</div>
-        <div class="stat-lbl">SL restants avant Max Loss <span class="c-muted">(à ${s.avgRisk ? s.avgRisk.toFixed(2) : '0.25'}% de risque)</span></div>
+        <div class="stat-lbl">SL restants avant Max Loss <span class="c-muted">(à ${s.avgRisk ? s.avgRisk.toFixed(2) : (acc.defaultRisk || 0.25).toFixed(2)}% de risque)</span></div>
       </div>
       <div class="card acc-good-box" style="margin-bottom:0">
         <div class="stat-val c-green mono">${s.tpCount >= 500 ? '∞' : s.tpCount}</div>
@@ -2033,14 +2041,14 @@ function renderAccEquityChart(s) {
     type: 'line',
     data: { labels, datasets: [{
       label: 'Solde', data,
-      borderColor: '#4a8fe8', backgroundColor: 'rgba(74,143,232,.08)',
+      borderColor: '#8b5cf6', backgroundColor: 'rgba(139,92,246,.08)',
       borderWidth: 1.5, pointRadius: 2, fill: true, tension: .3
     }] },
     options: {
       responsive: true, plugins: { legend: { display: false } },
       scales: {
-        x: { grid: { color: '#1e2738' }, ticks: { color: '#546278', font: { size: 10 } } },
-        y: { grid: { color: '#1e2738' }, ticks: { color: '#546278', font: { size: 10 } } }
+        x: { grid: { color: '#2a2444' }, ticks: { color: '#9089b3', font: { size: 10 } } },
+        y: { grid: { color: '#2a2444' }, ticks: { color: '#9089b3', font: { size: 10 } } }
       }
     }
   });
@@ -2072,14 +2080,14 @@ function renderAccPnlChart(s) {
     type: 'bar',
     data: { labels: keys, datasets: [{
       label: 'P&L', data,
-      backgroundColor: data.map(v => v >= 0 ? 'rgba(46,168,74,.7)' : 'rgba(217,79,79,.7)'),
+      backgroundColor: data.map(v => v >= 0 ? 'rgba(34,230,168,.7)' : 'rgba(255,92,122,.7)'),
       borderRadius: 3
     }] },
     options: {
       responsive: true, plugins: { legend: { display: false } },
       scales: {
-        x: { grid: { display: false }, ticks: { color: '#546278', font: { size: 9 } } },
-        y: { grid: { color: '#1e2738' }, ticks: { color: '#546278', font: { size: 10 } } }
+        x: { grid: { display: false }, ticks: { color: '#9089b3', font: { size: 9 } } },
+        y: { grid: { color: '#2a2444' }, ticks: { color: '#9089b3', font: { size: 10 } } }
       }
     }
   });
@@ -2111,6 +2119,7 @@ function openAccountModal(id) {
   document.getElementById('acc-maxpct').value = acc ? acc.maxLossPct : '';
   document.getElementById('acc-maxusd').value = acc ? acc.maxLossDollar : '';
   document.getElementById('acc-start').value  = acc ? acc.startBalance : '';
+  document.getElementById('acc-defrisk').value = acc ? acc.defaultRisk : '';
   document.getElementById('m-account').classList.add('on');
 }
 function closeAccountModal() { document.getElementById('m-account').classList.remove('on'); }
@@ -2130,6 +2139,7 @@ function saveAccount() {
     maxLossPct: parseFloat(document.getElementById('acc-maxpct').value) || 0,
     maxLossDollar: parseFloat(document.getElementById('acc-maxusd').value) || 0,
     startBalance: startRaw !== '' ? parseFloat(startRaw) : size,
+    defaultRisk: parseFloat(document.getElementById('acc-defrisk').value) || 0.25,
     createdAt: editing ? accounts.find(a => a.id === parseInt(idVal)).createdAt : new Date().toISOString(),
   };
   accounts = editing ? accounts.map(a => a.id === acc.id ? acc : a) : [...accounts, acc];
@@ -2228,34 +2238,34 @@ function renderCal() {
     let bgColor = isWeekend ? 'var(--bg)' : 'var(--bg3)';
     let borderColor = 'var(--border)';
     let alpha = '';
-    if (isHigh) { bgColor = 'rgba(217,79,79,.07)'; borderColor = 'rgba(217,79,79,.35)'; }
+    if (isHigh) { bgColor = 'rgba(255,92,122,.07)'; borderColor = 'rgba(255,92,122,.35)'; }
     if (dt.length > 0) {
-      if (rr > 0) { bgColor = 'rgba(46,168,74,.07)'; borderColor = 'rgba(46,168,74,.3)'; }
-      else if (rr < 0) { bgColor = 'rgba(217,79,79,.07)'; borderColor = 'rgba(217,79,79,.3)'; }
+      if (rr > 0) { bgColor = 'rgba(34,230,168,.07)'; borderColor = 'rgba(34,230,168,.3)'; }
+      else if (rr < 0) { bgColor = 'rgba(255,92,122,.07)'; borderColor = 'rgba(255,92,122,.3)'; }
       else { bgColor = 'rgba(84,98,120,.07)'; }
     }
     if (isToday) borderColor = 'var(--accent)';
 
     // Dots trades
     const dots = dt.map(t => {
-      const c = t.statut==='TP' ? '#2ea84a' : t.statut==='SL' ? '#d94f4f' : '#546278';
+      const c = t.statut==='TP' ? '#22e6a8' : t.statut==='SL' ? '#ff5c7a' : '#9089b3';
       return `<span title="${t.actif} ${t.sens} ${t.statut} ${t.rrr}R" style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${c};margin:1px 1px 0 0;flex-shrink:0"></span>`;
     }).join('');
 
     // RR du jour
     const rrStr = dt.length
-      ? `<div style="font-size:10px;font-weight:800;font-variant-numeric:tabular-nums;color:${rr>0?'#2ea84a':rr<0?'#d94f4f':'#546278'};margin-top:auto">${rr>0?'+':''}${rr.toFixed(1)}R</div>`
+      ? `<div style="font-size:10px;font-weight:800;font-variant-numeric:tabular-nums;color:${rr>0?'#22e6a8':rr<0?'#ff5c7a':'#9089b3'};margin-top:auto">${rr>0?'+':''}${rr.toFixed(1)}R</div>`
       : '';
 
     // Indicateur news haute impact (depuis ecoEventsByDate)
     const ecoForDay = (ecoEventsByDate || {})[ds] || [];
     const ecoAbbrevs = [...new Set(ecoForDay.map(e => ecoAbbrev(e.title)))].slice(0,3);
     const hasEco = ecoAbbrevs.length > 0;
-    if (hasEco && borderColor === 'var(--border)') borderColor = 'rgba(200,148,26,.35)';
+    if (hasEco && borderColor === 'var(--border)') borderColor = 'rgba(240,168,60,.35)';
 
     const ecoTag = hasEco
       ? `<div data-day-popup onclick="showDayEvents('${ds}',event)" style="display:flex;flex-wrap:wrap;gap:2px;margin-top:auto;padding-top:4px;cursor:pointer">
-          ${ecoAbbrevs.map(a => `<span style="font-size:7px;font-weight:600;color:#c8941a;background:rgba(200,148,26,.12);border:1px solid rgba(200,148,26,.22);border-radius:3px;padding:1px 5px;line-height:1.5;letter-spacing:.02em">${a}</span>`).join('')}
+          ${ecoAbbrevs.map(a => `<span style="font-size:7px;font-weight:600;color:#f0a83c;background:rgba(240,168,60,.12);border:1px solid rgba(240,168,60,.22);border-radius:3px;padding:1px 5px;line-height:1.5;letter-spacing:.02em">${a}</span>`).join('')}
         </div>`
       : '';
 
@@ -2309,7 +2319,7 @@ function renderCal() {
 let _ecoCacheTs = 0;
 let ecoEventsByDate = {};
 const ECO_CURRENCIES = ['USD','EUR','GBP','JPY'];
-const ECO_CCY_COL = { USD:'#4a8fe8', EUR:'#c8941a', GBP:'#2ea84a', JPY:'#d94f4f' };
+const ECO_CCY_COL = { USD:'#8b5cf6', EUR:'#f0a83c', GBP:'#22e6a8', JPY:'#ff5c7a' };
 
 function ecoAbbrev(title) {
   const t = title.toLowerCase();
@@ -2466,7 +2476,7 @@ async function loadEcoCal(force) {
           color:${isToday ? 'var(--accent)' : 'var(--muted)'};
           border-top:1px solid ${isToday ? 'var(--accent)' : 'var(--border)'};
           border-bottom:1px solid var(--border);
-          background:${isToday ? 'rgba(74,143,232,0.06)' : 'transparent'}">
+          background:${isToday ? 'rgba(139,92,246,0.06)' : 'transparent'}">
           ${capDay}${isToday ? ' <span style="font-size:9px;background:var(--accent);color:#fff;padding:1px 7px;border-radius:3px;margin-left:8px;vertical-align:middle">AUJOURD\'HUI</span>' : ''}
         </td>
       </tr>`;
