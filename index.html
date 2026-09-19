@@ -470,6 +470,9 @@ tr:hover td { background: rgba(255,255,255,.02); }
 .td-shot-wrap { display: flex; align-items: center; justify-content: center; max-width: 100%; max-height: 100%; }
 .td-shot-img { max-width: 100%; max-height: 60vh; border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,.4); border: 1px solid var(--border2); }
 .td-shot-fallback { display: none; flex-direction: column; align-items: center; gap: 10px; padding: 40px; }
+.td-shot-section { display: flex; flex-direction: column; align-items: center; margin-bottom: 28px; }
+.td-shot-section:last-child { margin-bottom: 0; }
+.td-shot-lbl { font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
 .td-info { flex: 1 1 50%; overflow-y: auto; padding: 28px; }
 tr[onclick]:hover { background: var(--bg3); }
 @media (max-width: 900px) {
@@ -1208,7 +1211,8 @@ tr[onclick]:hover { background: var(--bg3); }
         </select>
       </div>
       <div class="fg"><label class="fl">Liquidité visée</label><input type="text" class="fi" id="t-liq" placeholder="PDL, London low..."></div>
-      <div class="fg"><label class="fl">Screenshot</label><input type="url" class="fi" id="t-ss" placeholder="https://tradingview.com/x/..."></div>
+      <div class="fg"><label class="fl">Screenshot TF Analyse</label><input type="url" class="fi" id="t-ss-tfa" placeholder="https://tradingview.com/x/..."></div>
+      <div class="fg"><label class="fl">Screenshot TF Entrée</label><input type="url" class="fi" id="t-ss-tfe" placeholder="https://tradingview.com/x/..."></div>
       <div class="fg" id="fg-compte" style="display:none"><label class="fl">Compte</label>
         <select class="fs" id="t-account">
           <option value="">— Aucun —</option>
@@ -1553,7 +1557,8 @@ function openEditTrade(id) {
   document.getElementById('t-statut').value = t.statut;
   document.getElementById('t-cote').value = t.cote;
   document.getElementById('t-liq').value = t.liq || '';
-  document.getElementById('t-ss').value = t.ss || '';
+  document.getElementById('t-ss-tfa').value = t.ssTfa || t.ss || '';
+  document.getElementById('t-ss-tfe').value = t.ssTfe || '';
   document.getElementById('t-com').value = t.com || '';
   const isReelEdit = t.mode === 'reel';
   document.getElementById('fg-compte').style.display = isReelEdit ? '' : 'none';
@@ -1576,7 +1581,7 @@ function openAdd(mode) {
   document.getElementById('t-mode').value = mode;
   document.getElementById('m-title').textContent = mode === 'reel' ? 'Nouveau trade réel' : 'Nouveau backtest';
   document.getElementById('t-date').value = new Date().toISOString().split('T')[0];
-  ['t-rrc','t-rrr','t-gain','t-com','t-ss','t-liq'].forEach(id => document.getElementById(id).value = '');
+  ['t-rrc','t-rrr','t-gain','t-com','t-ss-tfa','t-ss-tfe','t-liq'].forEach(id => document.getElementById(id).value = '');
   const isReel = mode === 'reel';
   document.getElementById('fg-compte').style.display = isReel ? '' : 'none';
   document.getElementById('fg-risque').style.display = isReel ? '' : 'none';
@@ -1615,7 +1620,8 @@ function saveT() {
     statut: document.getElementById('t-statut').value,
     cote: document.getElementById('t-cote').value,
     liq: document.getElementById('t-liq').value,
-    ss: document.getElementById('t-ss').value,
+    ssTfa: document.getElementById('t-ss-tfa').value,
+    ssTfe: document.getElementById('t-ss-tfe').value,
     com: document.getElementById('t-com').value,
     accountId: accVal !== '' ? parseInt(accVal) : null,
     risque: riskVal !== '' ? parseFloat(riskVal) : null,
@@ -1726,16 +1732,23 @@ function renderTradeDetail(t) {
   const sCl = t.sens === 'Achat' ? 'c-green' : 'c-red';
 
   const shotEl = document.getElementById('td-shot');
-  const ssSafe = t.ss ? t.ss.replace(/"/g, '&quot;') : '';
-  shotEl.innerHTML = t.ss ? `
-    <div class="td-shot-wrap">
-      <img src="${ssSafe}" class="td-shot-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-      <div class="td-shot-fallback">
-        <div class="c-muted">Aperçu non disponible directement</div>
+  const ssTfaVal = t.ssTfa || t.ss || '';
+  const ssTfeVal = t.ssTfe || '';
+  function tdShotBlock(label, url) {
+    if (!url) return `<div class="td-shot-section"><div class="td-shot-lbl">${label}</div><div class="c-muted" style="font-size:11px">Aucun screenshot</div></div>`;
+    const safe = url.replace(/"/g, '&quot;');
+    return `<div class="td-shot-section">
+      <div class="td-shot-lbl">${label}</div>
+      <div class="td-shot-wrap">
+        <img src="${safe}" class="td-shot-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+        <div class="td-shot-fallback">
+          <div class="c-muted">Aperçu non disponible directement</div>
+        </div>
       </div>
-    </div>
-    <a class="btn btn-primary" style="margin-top:16px" href="${ssSafe}" target="_blank" rel="noopener">Ouvrir le graphique TradingView &#8599;</a>
-  ` : `<div class="c-muted">Aucun screenshot enregistré pour ce trade</div>`;
+      <a class="btn btn-primary btn-sm" style="margin-top:10px" href="${safe}" target="_blank" rel="noopener">Ouvrir ${label} &#8599;</a>
+    </div>`;
+  }
+  shotEl.innerHTML = (ssTfaVal || ssTfeVal) ? (tdShotBlock('TF Analyse', ssTfaVal) + tdShotBlock('TF Entrée', ssTfeVal)) : `<div class="c-muted">Aucun screenshot enregistré pour ce trade</div>`;
 
   document.getElementById('td-info').innerHTML = `
     <div class="sh" style="margin-bottom:20px;align-items:flex-start">
@@ -1793,7 +1806,8 @@ function rowJ(t) {
   const sCl = t.sens === 'Achat' ? 'c-green' : 'c-red';
   const sB  = t.statut === 'TP' ? 'b-tp' : t.statut === 'SL' ? 'b-sl' : 'b-be';
   const cB  = t.cote === 'A+' ? 'b-ap' : t.cote === 'A' ? 'b-a' : 'b-b';
-  const ss  = t.ss ? `<a href="${t.ss}" target="_blank" onclick="event.stopPropagation()" style="color:var(--accent);text-decoration:none;font-size:11px">Capture</a> ` : '';
+  const ssLink = t.ssTfa || t.ssTfe || t.ss;
+  const ss  = ssLink ? `<a href="${ssLink}" target="_blank" onclick="event.stopPropagation()" style="color:var(--accent);text-decoration:none;font-size:11px">Capture</a> ` : '';
   return `<tr onclick="openTradeDetail(${t.id})" style="cursor:pointer">
     <td class="c-muted mono" style="font-size:11px">${t.id}</td>
     <td class="mono">${t.date}</td>
@@ -1814,7 +1828,8 @@ function rowBT(t) {
   const sCl = t.sens === 'Achat' ? 'c-green' : 'c-red';
   const sB  = t.statut === 'TP' ? 'b-tp' : t.statut === 'SL' ? 'b-sl' : 'b-be';
   const cB  = t.cote === 'A+' ? 'b-ap' : t.cote === 'A' ? 'b-a' : 'b-b';
-  const ss  = t.ss ? `<a href="${t.ss}" target="_blank" style="color:var(--accent);text-decoration:none;font-size:11px">Capture</a> ` : '';
+  const ssLink = t.ssTfa || t.ssTfe || t.ss;
+  const ss  = ssLink ? `<a href="${ssLink}" target="_blank" style="color:var(--accent);text-decoration:none;font-size:11px">Capture</a> ` : '';
   return `<tr>
     <td class="c-muted mono" style="font-size:11px">${t.id}</td>
     <td class="mono">${t.date}</td>
