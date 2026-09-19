@@ -1040,6 +1040,9 @@ tr[onclick]:hover { background: var(--bg3); }
     <div class="stat-box"><div class="stat-val c-red mono" id="s-l">—</div><div class="stat-lbl">Losses</div></div>
     <div class="stat-box"><div class="stat-val mono" id="s-be">—</div><div class="stat-lbl">Break Even</div></div>
   </div>
+  <div class="stat-box" style="margin-bottom:20px">
+    <div class="stat-val mono" id="s-gain">—</div><div class="stat-lbl">Gain Net ($)</div>
+  </div>
 
   <div class="g2">
     <div class="card">
@@ -1191,6 +1194,9 @@ tr[onclick]:hover { background: var(--bg3); }
       <div class="fg"><label class="fl">Heure</label><input type="time" class="fi" id="t-heure"></div>
       <div class="fg"><label class="fl">RR Cible</label><input type="number" class="fi" id="t-rrc" step="0.01" placeholder="2.00"></div>
       <div class="fg"><label class="fl">RR Réalisé *</label><input type="number" class="fi" id="t-rrr" step="0.01" placeholder="ex: 2.00 ou -1"></div>
+      <div class="fg"><label class="fl">Gain / Perte réel ($)</label><input type="number" class="fi" id="t-gain" step="0.01" placeholder="ex: 150 ou -80">
+        <div style="font-size:10px;color:var(--muted);margin-top:6px">Optionnel — si rempli, remplace le calcul via RR pour l'accumulation sur les comptes et le backtest (prend en compte le spread)</div>
+      </div>
       <div class="fg"><label class="fl">Statut *</label>
         <select class="fs" id="t-statut">
           <option value="TP">TP</option><option value="SL">SL</option><option value="BE">BE</option>
@@ -1544,6 +1550,7 @@ function closeM() { document.getElementById('m-add').classList.remove('on'); }
 function saveT() {
   const date = document.getElementById('t-date').value;
   const rrr  = document.getElementById('t-rrr').value;
+  const gainVal = document.getElementById('t-gain').value;
   if (!date || rrr === '') { alert('Date et RR réalisé obligatoires.'); return; }
   const id = trades.length ? Math.max(...trades.map(t => t.id)) + 1 : 1;
   const mode = document.getElementById('t-mode').value;
@@ -1567,6 +1574,7 @@ function saveT() {
     com: document.getElementById('t-com').value,
     accountId: accVal !== '' ? parseInt(accVal) : null,
     risque: riskVal !== '' ? parseFloat(riskVal) : null,
+    gain: gainVal !== '' ? parseFloat(gainVal) : null,
   };
   trades.push(newTrade);
   saveTrades();
@@ -1837,7 +1845,9 @@ function cs(list) {
   const sw = wins.reduce((a, t) => a + t.rrr, 0);
   const sl = Math.abs(loss.reduce((a, t) => a + t.rrr, 0));
   const pf = sl > 0 ? (sw / sl).toFixed(2) : wins.length ? '∞' : '—';
-  return { wins: wins.length, loss: loss.length, be: be.length, total: list.length, nEff, wr, rrCum, rrMoy, pf };
+  const gainList = list.filter(t => t.gain != null && t.gain !== '');
+  const gainSum = +gainList.reduce((a, t) => a + parseFloat(t.gain), 0).toFixed(2);
+  return { wins: wins.length, loss: loss.length, be: be.length, total: list.length, nEff, wr, rrCum, rrMoy, pf, gainSum, gainN: gainList.length };
 }
 
 function toggleStatFilter(set, val, prefix) {
@@ -1889,6 +1899,9 @@ function renderStats() {
   document.getElementById('s-w').textContent   = s.wins;
   document.getElementById('s-l').textContent   = s.loss;
   document.getElementById('s-be').textContent  = s.be;
+  const ge = document.getElementById('s-gain');
+  ge.textContent = s.gainN > 0 ? (s.gainSum > 0 ? '+' : '') + s.gainSum + '$' : '—';
+  ge.className = 'stat-val mono ' + (s.gainSum >= 0 ? 'c-green' : 'c-red');
 
   document.getElementById('s-asset').innerHTML = ['DJ30', 'NAS100', 'SP500', 'DAX'].map(a => {
     const t = list.filter(x => x.actif === a);
@@ -1980,7 +1993,7 @@ function computeAccountStats(acc) {
 
   ts.forEach(t => {
     const risk = (t.risque != null && t.risque !== '') ? parseFloat(t.risque) : 0;
-    const pnl = bal * (risk / 100) * t.rrr;
+    const pnl = (t.gain != null && t.gain !== '') ? parseFloat(t.gain) : bal * (risk / 100) * t.rrr;
     bal += pnl;
     curve.push({ date: t.date, balance: +bal.toFixed(2), pnl: +pnl.toFixed(2) });
     if (t.statut === 'TP') { wins++; winRRSum += t.rrr; winN++; }
