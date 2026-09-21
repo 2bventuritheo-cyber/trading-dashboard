@@ -3034,7 +3034,9 @@ async function initSync() {
     try { await pushTrades(trades); } catch(e) {}
   }
   await syncFromRemote();
+  await syncAccountsFromRemote();
   subscribeRealtime();
+  subscribeAccountsRealtime();
 }
 
 // ─── INIT ─────────────────────────────────────────────────────────
