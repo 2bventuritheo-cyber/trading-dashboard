@@ -1220,6 +1220,10 @@ tr[onclick]:hover { background: var(--bg3); }
       </div>
       <div class="fg" id="fg-risque" style="display:none"><label class="fl">Risque %</label><input type="number" class="fi" id="t-risque" step="0.01" placeholder="0.25"></div>
     </div>
+    <div class="g2" style="margin-top:4px">
+      <div class="fg"><label class="fl">Plan respecté</label><select class="fi" id="t-plan" onchange="togglePlanCom()"><option value="">— Non renseigné —</option><option value="oui">Oui</option><option value="non">Non</option></select></div>
+    </div>
+    <div class="fg" id="fg-plan-com" style="display:none"><label class="fl">Pourquoi le plan n'a pas été respecté ?</label><textarea class="fta" id="t-plan-com" placeholder="Ce qui n'a pas été respecté et pourquoi..."></textarea></div>
     <div class="fg" style="margin-top:4px"><label class="fl">Commentaire</label><textarea class="fta" id="t-com" placeholder="Ce que tu retiens de ce trade..."></textarea></div>
     <div class="flex" style="justify-content:flex-end;gap:8px;margin-top:12px">
       <button class="btn btn-ghost" onclick="closeM()">Annuler</button>
@@ -1540,6 +1544,10 @@ function quickAdd(setup) {
 
 // ─── MODAL ───────────────────────────────────────────────────────
 let editingTradeId = null;
+function togglePlanCom() {
+  const v = document.getElementById('t-plan').value;
+  document.getElementById('fg-plan-com').style.display = v === 'non' ? '' : 'none';
+}
 function openEditTrade(id) {
   const t = trades.find(x => x.id === id);
   if (!t) return;
@@ -1563,6 +1571,9 @@ function openEditTrade(id) {
   document.getElementById('t-ss-tfa').value = t.ssTfa || t.ss || '';
   document.getElementById('t-ss-tfe').value = t.ssTfe || '';
   document.getElementById('t-com').value = t.com || '';
+  document.getElementById('t-plan').value = t.planRespecte || '';
+  document.getElementById('t-plan-com').value = t.planCom || '';
+  togglePlanCom();
   const isReelEdit = t.mode === 'reel';
   document.getElementById('fg-compte').style.display = isReelEdit ? '' : 'none';
   document.getElementById('fg-risque').style.display = isReelEdit ? '' : 'none';
@@ -1584,7 +1595,9 @@ function openAdd(mode) {
   document.getElementById('t-mode').value = mode;
   document.getElementById('m-title').textContent = mode === 'reel' ? 'Nouveau trade réel' : 'Nouveau backtest';
   document.getElementById('t-date').value = new Date().toISOString().split('T')[0];
-  ['t-rrc','t-rrr','t-gain','t-com','t-ss-tfa','t-ss-tfe','t-liq'].forEach(id => document.getElementById(id).value = '');
+  ['t-rrc','t-rrr','t-gain','t-com','t-ss-tfa','t-ss-tfe','t-liq','t-plan-com'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('t-plan').value = '';
+  togglePlanCom();
   const isReel = mode === 'reel';
   document.getElementById('fg-compte').style.display = isReel ? '' : 'none';
   document.getElementById('fg-risque').style.display = isReel ? '' : 'none';
@@ -1626,6 +1639,8 @@ function saveT() {
     ssTfa: document.getElementById('t-ss-tfa').value,
     ssTfe: document.getElementById('t-ss-tfe').value,
     com: document.getElementById('t-com').value,
+    planRespecte: document.getElementById('t-plan').value,
+    planCom: document.getElementById('t-plan').value === 'non' ? document.getElementById('t-plan-com').value : '',
     accountId: accVal !== '' ? parseInt(accVal) : null,
     risque: riskVal !== '' ? parseFloat(riskVal) : null,
     gain: gainVal !== '' ? parseFloat(gainVal) : null,
@@ -1780,6 +1795,11 @@ function renderTradeDetail(t) {
       ${t.liq ? `<div style="margin-top:14px"><div class="fl">Liquidité visée</div><div style="margin-top:4px">${t.liq}</div></div>` : ''}
       ${acc ? `<div style="margin-top:14px"><div class="fl">Compte</div><div style="margin-top:4px">${acc.name}</div></div>` : ''}
     </div>
+
+    ${t.planRespecte ? `<div class="card">
+      <div class="label" style="margin-bottom:10px">Plan respecté</div>
+      <div style="line-height:1.6"><span class="badge ${t.planRespecte === 'oui' ? 'b-tp' : 'b-sl'}">${t.planRespecte === 'oui' ? 'Oui' : 'Non'}</span>${t.planRespecte === 'non' && t.planCom ? `<div style="white-space:pre-wrap;margin-top:8px">${t.planCom}</div>` : ''}</div>
+    </div>` : ''}
 
     ${t.com ? `<div class="card">
       <div class="label" style="margin-bottom:10px">Commentaire</div>
